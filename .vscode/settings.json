@@ -1,0 +1,5 @@
+{
+    "wpilib.skipTests": false,
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "java.debug.settings.onBuildFailureProceed": true
+}
