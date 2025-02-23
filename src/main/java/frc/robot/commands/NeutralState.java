@@ -41,7 +41,8 @@ public class NeutralState extends SequentialCommandGroup {
           coral.setSpeedCommand(0),
           wrist.WristPose(-80),
           elevator.moveToHeight(0)
-          ).withTimeout(1)
+          ).withTimeout(1),
+         new InstantCommand(()->elevator.homeElevator())
         
         
 

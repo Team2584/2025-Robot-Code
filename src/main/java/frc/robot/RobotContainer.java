@@ -241,17 +241,17 @@ public class RobotContainer {
     // joystick.y().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
     /* MICHAEL WAY OF CORAL */
-    joystick.rightBumper().and(joystick.povRight()).onTrue(new ScoreCoralState(this,L4)).onFalse(new NeutralState(this)).onFalse(new NeutralState(this));
-    joystick.rightTrigger().and(joystick.povRight()).onTrue(new ScoreCoralState(this,L3)).onFalse(new NeutralState(this)).onFalse(new NeutralState(this));
-    joystick.leftBumper().and(joystick.povRight()).onTrue(new ScoreCoralState(this,L2)).onFalse(new NeutralState(this)).onFalse(new NeutralState(this));
-    joystick.leftTrigger().and(joystick.povRight()).onTrue(new ScoreCoralState(this,L1)).onFalse(new NeutralState(this)).onFalse(new NeutralState(this));
+    joystick.rightBumper().and(joystick.povRight()).onTrue(new ScoreCoralState(this,L4)).onFalse(new NeutralState(this));
+    joystick.rightTrigger().and(joystick.povRight()).onTrue(new ScoreCoralState(this,L3)).onFalse(new NeutralState(this));
+    joystick.leftBumper().and(joystick.povRight()).onTrue(new ScoreCoralState(this,L2)).onFalse(new NeutralState(this));
+    joystick.leftTrigger().and(joystick.povRight()).onTrue(new ScoreCoralState(this,L1)).onFalse(new NeutralState(this));
 
 
     /* Michael Way of Algae */
-    joystick.rightBumper().and(joystick.povLeft()).onTrue( new ScoreCoralState(this,NET)).onFalse(new NeutralState(this));
-    joystick.rightTrigger().and(joystick.povLeft()).onTrue( new ScoreCoralState(this,ALGAE_HIGH)).onFalse(new NeutralState(this));
-    joystick.leftBumper().and(joystick.povLeft()).onTrue( new ScoreCoralState(this,ALGAE_LOW)).onFalse(new NeutralState(this));
-    joystick.leftTrigger().and(joystick.povLeft()).onTrue( new ScoreCoralState(this,GROUND_ALGAE)).onFalse(new NeutralState(this));
+    joystick.rightBumper().and(joystick.povLeft()).onTrue( new NetAlgae(this)).onFalse(new NeutralState(this));
+    joystick.rightTrigger().and(joystick.povLeft()).onTrue(new PickupReefAlgaeState(this,ALGAE_HIGH).until(() -> algae.holdingAlgae()).finallyDo(()->new NeutralAlgae(this))).onFalse(new NeutralAlgae(this));
+    joystick.leftBumper().and(joystick.povLeft()).onTrue( new PickupReefAlgaeState(this,ALGAE_LOW).until(() -> algae.holdingAlgae()).finallyDo(()->new NeutralAlgae(this))).onFalse(new NeutralAlgae(this));
+    joystick.leftTrigger().and(joystick.povLeft()).onTrue(new PickupReefAlgae(elevator,wrist,algae,GROUND_ALGAE,30).until(() -> algae.holdingAlgae()).finallyDo(()->new NeutralAlgae(this))).onFalse(new NeutralAlgae(this));
     
 
     // Left
@@ -322,11 +322,11 @@ public class RobotContainer {
     //   )
     // );
 
-    // joystick.povRight().whileTrue(climber.lowerRobot()); // Lower Climb
-    // joystick.povLeft().whileTrue(climber.liftRobot()); // Lift Climb
+    joystick.povDown().whileTrue(climber.lowerRobot()); // Lower Climb
+    joystick.povUp().whileTrue(climber.liftRobot()); // Lift Climb
 
-    // joystick.povUp().onTrue(ramp.liftRamp()); // Ramp Up Control
-    // joystick.povDown().onTrue(ramp.lowerRamp()); // Ramp Down Control
+    joystick.y().onTrue(ramp.liftRamp()); // Ramp Up Control
+    joystick.b().onTrue(ramp.lowerRamp()); // Ramp Down Control
 
     
 
