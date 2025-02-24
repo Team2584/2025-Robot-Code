@@ -105,7 +105,8 @@ public class RobotContainer {
       logger::getHeading,
 
       // Limelight NetworkTable names
-      VisionConstants.camera0Name);
+      VisionConstants.camera0Name,
+      VisionConstants.camera1Name);
   }
 
   public CommandSwerveDrivetrain getDrivetrain(){
@@ -258,14 +259,14 @@ public class RobotContainer {
     blue4.whileTrue(new DriveRelativeTag(getDrivetrain(), 
                                                       getVision(), 
                                                       logger, 
-                                                      new Translation2d(.3,-.7), 
+                                                      new Translation2d(.25,0), 
                                                       0));
 
     // Right
     redL4.whileTrue(new DriveRelativeTag(getDrivetrain(), 
                                                       getVision(), 
                                                       logger, 
-                                                      new Translation2d(.3,.7), 
+                                                      new Translation2d(.25,0), 
                                                       0));
 
     /* RUSH WAY OF CORAL */

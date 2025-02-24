@@ -24,17 +24,19 @@ public class ParallelTag extends Command {
   private final Supplier<Double> translationX;
   private final Supplier<Double> translationY;
   private final PIDController pid;
+  private final int cameraIndex;
 
   public ParallelTag(
-      CommandSwerveDrivetrain drivetrain,
-      VisionSubsystem vision, Telemetry logger,
-      Supplier<Double> translationX,
-      Supplier<Double> translationY) {
+    CommandSwerveDrivetrain drivetrain,
+    VisionSubsystem vision, Telemetry logger,
+    Supplier<Double> translationX,
+    Supplier<Double> translationY, int cameraIndex) {
     this.drivetrain = drivetrain;
     this.vision = vision;
     this.logger = logger;
     this.translationX = translationX;
     this.translationY = translationY;
+    this.cameraIndex = cameraIndex;
 
     pid = new PIDController(6, 0.0, 0.0);
     pid.setSetpoint(0.0); // Diff between actual and target heading should be 0
@@ -49,7 +51,7 @@ public class ParallelTag extends Command {
   @Override
   public void execute() {
     // Get the primary tag ID seen by Camera 0 from the vision subsystem.
-    Optional<Integer> maybeTagId = vision.getPrimaryTagId(0);
+    Optional<Integer> maybeTagId = vision.getPrimaryTagId(cameraIndex);
     if (maybeTagId.isEmpty()) {
       // If no tag is detected, default to no rotational override.
       drivetrain.setControl(
