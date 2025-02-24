@@ -2,9 +2,7 @@ package frc.robot.commands;
 
 import static edu.wpi.first.units.Units.Rotation;
 
-import java.sql.Time;
 import java.util.List;
-import java.util.Timer;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.commands.FollowPathCommand;
@@ -32,6 +30,12 @@ import frc.robot.Telemetry;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.VisionSubsystem;
 
+
+/**
+ * Drives relative to a tag offset of the largest tag seen by cameraIndex Limelight.
+ * This uses the global POSE ESTIMATION of the robot
+ */
+
 public class DriveRelativeTag extends Command{
     private final CommandSwerveDrivetrain drivetrain;
     private final VisionSubsystem vision;
@@ -44,8 +48,6 @@ public class DriveRelativeTag extends Command{
 
     private FollowPathCommand followCommand;
 
-    private double totalTime;
-    private final Timer timer = new Timer();
     private double distanceToTarget;
     Pose2d targetPose;
 
@@ -178,7 +180,7 @@ public class DriveRelativeTag extends Command{
 
     @Override
     public void end(boolean interrupted) {
-        // followCommand.end(interrupted);
+        followCommand.end(interrupted);
         drivetrain.setControl(
             new SwerveRequest.FieldCentric()
             .withVelocityX(0)

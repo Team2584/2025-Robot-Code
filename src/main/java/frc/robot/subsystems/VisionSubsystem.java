@@ -43,6 +43,7 @@ public class VisionSubsystem extends SubsystemBase {
   private final TargetObservation[] latestTargetObservations;
   private final boolean[] connected;
   private final Integer[] primaryTagIds;
+  private double[] MainTagDistance;
 
   // GLOBAL
   private final Supplier<Rotation2d> rotationSupplier;
@@ -64,6 +65,7 @@ public class VisionSubsystem extends SubsystemBase {
     txSubscribers = new DoubleSubscriber[count];
     tySubscribers = new DoubleSubscriber[count];
     taSubscribers = new DoubleSubscriber[count];
+    MainTagDistance = new double[count];
     megatag2Subscribers = new DoubleArraySubscriber[count];
     disconnectedAlerts = new Alert[count];
     latestTargetObservations = new TargetObservation[count];
@@ -100,7 +102,19 @@ public class VisionSubsystem extends SubsystemBase {
         return Optional.empty();
     }
     return Optional.ofNullable(primaryTagIds[cameraIndex]);
-}
+  }
+
+  public double getTX(int cameraIndex){
+    return txSubscribers[cameraIndex].getAsDouble();
+  }
+
+  public double getTY(int cameraIndex){
+    return tySubscribers[cameraIndex].getAsDouble();
+  }
+
+  public double getDistance(int cameraIndex){
+    return MainTagDistance[cameraIndex];
+  }
 
 
   @Override
@@ -132,11 +146,15 @@ public class VisionSubsystem extends SubsystemBase {
       Set<Integer> tagIdsSet = new HashSet<>();
       List<PoseObservation> poseObsList = new LinkedList<>();
 
+
       Integer bestTagId = null;
       double bestArea = 0;
 
       for (var rawSample : rawSamples) {
         if (rawSample.value.length == 0) continue;
+
+        MainTagDistance[count] = rawSample.value[9];
+
 
         // Accumulate tag IDs
         for (int j = 11; j < rawSample.value.length; j += 7) {
