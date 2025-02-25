@@ -153,7 +153,7 @@ public class VisionSubsystem extends SubsystemBase {
       for (var rawSample : rawSamples) {
         if (rawSample.value.length == 0) continue;
 
-        MainTagDistance[count] = rawSample.value[9];
+        MainTagDistance[count-1] = rawSample.value[9];
 
 
         // Accumulate tag IDs
