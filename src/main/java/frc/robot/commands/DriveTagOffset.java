@@ -110,7 +110,9 @@ public class DriveTagOffset extends Command{
             new SwerveRequest.RobotCentric()
             .withVelocityX(velX)
             .withVelocityY(velY)
-            .withRotationalRate(0));
+            .withRotationalRate(0)
+            // .withRotationalRate(rotRate)
+        );
     }
 
 
