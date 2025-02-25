@@ -7,14 +7,20 @@ import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.SignalLogger;
+import com.ctre.phoenix6.hardware.jni.HardwareJNI.Context;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.path.EventMarker;
 
+import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.cscore.UsbCamera;
+import edu.wpi.first.cscore.VideoSink;
+import edu.wpi.first.cscore.VideoSource.ConnectionStrategy;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -32,6 +38,7 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.CoralSubsystem;
 import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.RampSubsystem;
+import frc.robot.subsystems.USBCameraSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
 import frc.robot.subsystems.WristSubsystem;
 import frc.robot.subsystems.AlgaeSubsystem;
@@ -109,6 +116,10 @@ public class RobotContainer {
       VisionConstants.camera1Name);
   }
 
+  private USBCameraSubsystem buildUSBCams() {
+    return new USBCameraSubsystem();
+  }
+
   public CommandSwerveDrivetrain getDrivetrain(){
     return drivetrain;
   }
@@ -144,6 +155,9 @@ public class RobotContainer {
   public VisionSubsystem getVision(){
     return vision;
   }
+  public USBCameraSubsystem getUSBCams(){
+    return usbCams;
+  }
   
   
   private final AlgaeSubsystem algae;
@@ -153,6 +167,7 @@ public class RobotContainer {
   private final ClimberSubsystem climber;
   private final RampSubsystem ramp;
   private final VisionSubsystem vision;
+  private final USBCameraSubsystem usbCams;
 
 
   // Map buttons to trigger variables
@@ -168,6 +183,7 @@ public class RobotContainer {
 
   
   public RobotContainer() {
+
     
     // Subsystem initialization
     algae = buildAlgaeMech();
@@ -177,6 +193,7 @@ public class RobotContainer {
     climber = buildClimberSubsystem();
     ramp = buildRampSubsystem();
     vision = buildVisionSubsystem();
+    usbCams =  buildUSBCams();
 
     //Pathplanner Named Commands (MUST BE DECLARED HERE AND HAVE THE SAME NAME)
     NamedCommands.registerCommand("netAlgae", new NetAlgae(this).withTimeout(1));
@@ -200,6 +217,10 @@ public class RobotContainer {
 
     SmartDashboard.putData("Auto Mode", autoChooser);
     SmartDashboard.putData("Field", m_field);
+
+    usbCams.setCamera(1);
+
+    
 
     configureBindings();
   }
@@ -268,6 +289,7 @@ public class RobotContainer {
                                                       logger, 
                                                       new Translation2d(.25,0), 
                                                       0));
+                                                      
 
     /* RUSH WAY OF CORAL */
     // redL4.onTrue(
@@ -324,11 +346,11 @@ public class RobotContainer {
     // );
 
     joystick.povDown().whileTrue(climber.lowerRobot()); // Lower Climb
-    joystick.povUp().whileTrue(climber.liftRobot()); // Lift Climb
 
-    joystick.y().onTrue(ramp.liftRamp()); // Ramp Up Control
-    joystick.b().onTrue(ramp.lowerRamp()); // Ramp Down Control
+    joystick.y().onTrue(new ParallelCommandGroup(ramp.liftRamp(),climber.lowerRobot(),usbCams.setCameraCommand(2))); // Ramp Up Control
 
+
+ 
     
 
 
