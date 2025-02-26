@@ -35,7 +35,7 @@ public class NeutralAlgae extends ParallelCommandGroup {
         
         algae.setSpeed(-0.05),
         wrist.WristPose(-60).withTimeout(0.7),
-        elevator.moveToHeight(0).withTimeout(1)
+        elevator.moveToHeight(0).withTimeout(1).andThen( new InstantCommand(()->elevator.homeElevator()))
         
 
     );

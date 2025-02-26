@@ -23,6 +23,12 @@
           }
         },
         {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.175
+          }
+        },
+        {
           "type": "named",
           "data": {
             "name": "scoreCoral"
@@ -38,6 +44,12 @@
           "type": "named",
           "data": {
             "name": "liftLowAlgae"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.25
           }
         },
         {

@@ -205,7 +205,7 @@ public class ElevatorSubsystem extends SubsystemBase{
   }
   
   public Command homeElevatorCommand(){
-    return runOnce(()->homeElevator());
+    return runOnce(()->resetHeight(0));
   }
 
   /**
