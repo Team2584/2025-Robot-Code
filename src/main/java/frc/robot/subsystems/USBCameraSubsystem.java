@@ -25,6 +25,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.cscore.UsbCamera;
+import edu.wpi.first.cscore.VideoSink;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -43,16 +44,14 @@ public class USBCameraSubsystem extends SubsystemBase {
 
   private final UsbCamera camera1;
   private final UsbCamera camera2;
-  private final NetworkTableEntry cameraSelection;
-
+  private final VideoSink server;
 
   public USBCameraSubsystem() {
 
     //Camera initialization
     camera1 = CameraServer.startAutomaticCapture(0);
     camera2 = CameraServer.startAutomaticCapture(1);
-    cameraSelection = NetworkTableInstance.getDefault().getTable("").getEntry("CameraSelection");
-
+    server = CameraServer.getServer();
   }
 
   /**
@@ -61,24 +60,24 @@ public class USBCameraSubsystem extends SubsystemBase {
   public void setCamera(int cameraId) {
     if (cameraId == 1){
       System.out.println("Setting camera 1");
-      cameraSelection.setString(camera1.getName());
+      server.setSource(camera1);
     }
     else if (cameraId == 2){
       System.out.println("Setting camera 2");
-      cameraSelection.setString(camera2.getName());
+      server.setSource(camera2);
     }
   }
 
   public Command setCameraCommand(int cameraId) {
     if (cameraId == 1){
       System.out.println("Setting camera 1");
-      return runOnce(()->cameraSelection.setString(camera1.getName()));
+      return runOnce(()->server.setSource(camera1));
     }
     else if (cameraId == 2){
       System.out.println("Setting camera 2");
-      return runOnce(()->cameraSelection.setString(camera2.getName()));
+      return runOnce(()->server.setSource(camera2));
     }
-    return runOnce(()->cameraSelection.setString(camera1.getName()));
+    return runOnce(()->server.setSource(camera1));
   
   }
 

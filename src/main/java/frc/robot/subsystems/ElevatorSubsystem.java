@@ -200,8 +200,15 @@ public class ElevatorSubsystem extends SubsystemBase{
       resetHeight(0);
     }
     else{
-      return;
+      return ;
     }
+  }
+
+  public void homeElevatorLoop(){
+    while(!isZero()){
+      continue;
+    }
+    resetHeight(0);
   }
   
   public Command homeElevatorCommand(){
@@ -240,6 +247,7 @@ public class ElevatorSubsystem extends SubsystemBase{
   public void periodic() {
       SmartDashboard.putNumber("Elevator Position", rotationsToInches(leader.getPosition().getValueAsDouble()));
       SmartDashboard.putBoolean("Elevator isZero", isZero());
+      
 
 
       // This method will be called once per scheduler run
