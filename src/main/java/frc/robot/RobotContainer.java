@@ -6,6 +6,7 @@ package frc.robot;
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix.led.CANdle;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.hardware.jni.HardwareJNI.Context;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -29,6 +30,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 //Controller imports
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
@@ -43,6 +45,7 @@ import frc.robot.subsystems.VisionSubsystem;
 import frc.robot.subsystems.WristSubsystem;
 import frc.robot.subsystems.AlgaeSubsystem;
 import frc.robot.subsystems.ClimberSubsystem;
+import frc.robot.subsystems.CANdleSubsystem;
 
 import static frc.robot.Constants.*;
 import static frc.robot.Constants.ElevatorConstants.*;
@@ -120,6 +123,10 @@ public class RobotContainer {
     return new USBCameraSubsystem();
   }
 
+  private CANdleSubsystem buildCANdle() {
+    return new CANdleSubsystem();
+  }
+
   public CommandSwerveDrivetrain getDrivetrain(){
     return drivetrain;
   }
@@ -159,6 +166,9 @@ public class RobotContainer {
     return usbCams;
   }
   
+  public CANdleSubsystem getCandle(){
+    return candle;
+  }
   
   private final AlgaeSubsystem algae;
   private final CoralSubsystem coral;
@@ -168,6 +178,7 @@ public class RobotContainer {
   private final RampSubsystem ramp;
   private final VisionSubsystem vision;
   private final USBCameraSubsystem usbCams;
+  private final CANdleSubsystem candle;
 
 
   // Map buttons to trigger variables
@@ -183,8 +194,6 @@ public class RobotContainer {
 
   
   public RobotContainer() {
-
-    
     // Subsystem initialization
     algae = buildAlgaeMech();
     coral = buildCoralMech(); 
@@ -194,6 +203,7 @@ public class RobotContainer {
     ramp = buildRampSubsystem();
     vision = buildVisionSubsystem();
     usbCams =  buildUSBCams();
+    candle = buildCANdle();
 
     //Pathplanner Named Commands (MUST BE DECLARED HERE AND HAVE THE SAME NAME)
     NamedCommands.registerCommand("netAlgae", new NetAlgae(this).withTimeout(1));
@@ -220,6 +230,8 @@ public class RobotContainer {
 
     usbCams.setCamera(1);
 
+
+    candle.incrementAnimation();
     
 
     configureBindings();
@@ -348,12 +360,6 @@ public class RobotContainer {
     joystick.povDown().whileTrue(climber.lowerRobot()); // Lower Climb
 
     joystick.y().onTrue(new ParallelCommandGroup(ramp.liftRamp(),climber.lowerRobot(),usbCams.setCameraCommand(2))); // Ramp Up Control
-
-
- 
-    
-
-
 
     drivetrain.registerTelemetry(logger::telemeterize);
   }
