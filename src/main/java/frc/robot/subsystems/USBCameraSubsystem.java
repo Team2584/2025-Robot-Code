@@ -15,7 +15,6 @@ package frc.robot.subsystems;
 
 import static frc.robot.Constants.*;
 
-
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VoltageOut;
@@ -37,9 +36,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.RampConstants;
 import edu.wpi.first.wpilibj2.command.Command;
 
-
-
-
 public class USBCameraSubsystem extends SubsystemBase {
 
   private final UsbCamera camera1;
@@ -48,39 +44,35 @@ public class USBCameraSubsystem extends SubsystemBase {
 
   public USBCameraSubsystem() {
 
-    //Camera initialization
+    // Camera initialization
     camera1 = CameraServer.startAutomaticCapture(0);
     camera2 = CameraServer.startAutomaticCapture(1);
     server = CameraServer.getServer();
   }
 
   /**
-  * Sets the Camera stream to display on the Camera Server/Dashboard
-  */
+   * Sets the Camera stream to display on the Camera Server/Dashboard
+   */
   public void setCamera(int cameraId) {
-    if (cameraId == 1){
+    if (cameraId == 1) {
       System.out.println("Setting camera 1");
       server.setSource(camera1);
-    }
-    else if (cameraId == 2){
+    } else if (cameraId == 2) {
       System.out.println("Setting camera 2");
       server.setSource(camera2);
     }
   }
 
   public Command setCameraCommand(int cameraId) {
-    if (cameraId == 1){
+    if (cameraId == 1) {
       System.out.println("Setting camera 1");
-      return runOnce(()->server.setSource(camera1));
-    }
-    else if (cameraId == 2){
+      return runOnce(() -> server.setSource(camera1));
+    } else if (cameraId == 2) {
       System.out.println("Setting camera 2");
-      return runOnce(()->server.setSource(camera2));
+      return runOnce(() -> server.setSource(camera2));
     }
-    return runOnce(()->server.setSource(camera1));
-  
+    return runOnce(() -> server.setSource(camera1));
+
   }
 
-
-  
 }

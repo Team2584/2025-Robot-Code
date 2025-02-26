@@ -50,7 +50,8 @@ public class VisionSubsystem extends SubsystemBase {
   private final VisionConsumer consumer;
 
   /**
-   * @param consumer         A callback that receives valid vision pose measurements.
+   * @param consumer         A callback that receives valid vision pose
+   *                         measurements.
    * @param rotationSupplier A supplier for the current robot rotation.
    * @param limelightNames   Varargs of limelight NetworkTable names.
    */
@@ -99,28 +100,28 @@ public class VisionSubsystem extends SubsystemBase {
 
   public Optional<Integer> getPrimaryTagId(int cameraIndex) {
     if (cameraIndex < 0 || cameraIndex >= primaryTagIds.length) {
-        return Optional.empty();
+      return Optional.empty();
     }
     return Optional.ofNullable(primaryTagIds[cameraIndex]);
   }
 
-  public double getTX(int cameraIndex){
+  public double getTX(int cameraIndex) {
     return txSubscribers[cameraIndex].getAsDouble();
   }
 
-  public double getTY(int cameraIndex){
+  public double getTY(int cameraIndex) {
     return tySubscribers[cameraIndex].getAsDouble();
   }
 
-  public double getDistance(int cameraIndex){
+  public double getDistance(int cameraIndex) {
     return MainTagDistance[cameraIndex];
   }
-
 
   @Override
   public void periodic() {
     int count = limelightNames.length;
-    // For each limelight, update its connection status, target observation, and publish current orientation.
+    // For each limelight, update its connection status, target observation, and
+    // publish current orientation.
     for (int i = 0; i < count; i++) {
       // Update connection: if "tl" hasn't updated within 250ms, mark as disconnected.
       connected[i] = ((RobotController.getFPGATime() - latencySubscribers[i].getLastChange()) / 1000) < 250;
@@ -135,7 +136,8 @@ public class VisionSubsystem extends SubsystemBase {
       // Publish current robot orientation (Used for MegaTag2)
       double[] orientation = new double[] { rotationSupplier.get().getDegrees(), 0.0, 0.0, 0.0, 0.0, 0.0 };
       orientationPublishers[i].accept(orientation);
-      // LimelightHelpers.SetRobotOrientation(limelightNames[count], rotationSupplier.get().getDegrees(), 0, 0, 0, 0, 0);
+      // LimelightHelpers.SetRobotOrientation(limelightNames[count],
+      // rotationSupplier.get().getDegrees(), 0, 0, 0, 0, 0);
     }
     NetworkTableInstance.getDefault().flush();
 
@@ -146,19 +148,18 @@ public class VisionSubsystem extends SubsystemBase {
       Set<Integer> tagIdsSet = new HashSet<>();
       List<PoseObservation> poseObsList = new LinkedList<>();
 
-
       Integer bestTagId = null;
       double bestArea = 0;
 
       for (var rawSample : rawSamples) {
-        if (rawSample.value.length == 0) continue;
+        if (rawSample.value.length == 0)
+          continue;
 
-        MainTagDistance[count-1] = rawSample.value[9];
-
+        MainTagDistance[count - 1] = rawSample.value[9];
 
         // Accumulate tag IDs
         for (int j = 11; j < rawSample.value.length; j += 7) {
-          tagIdsSet.add((int) rawSample.value[j]);         
+          tagIdsSet.add((int) rawSample.value[j]);
 
           int tagId = (int) rawSample.value[j];
           double area = rawSample.value[j - 1]; // TA is assumed to be at offset 1 in the block.
@@ -168,18 +169,18 @@ public class VisionSubsystem extends SubsystemBase {
           }
         }
 
-        // Compute vision timestamp (rawSample.timestamp is in microseconds; rawSample.value[6] is latency in ms)
+        // Compute vision timestamp (rawSample.timestamp is in microseconds;
+        // rawSample.value[6] is latency in ms)
         double visionTimestamp = rawSample.timestamp * 1e-6 - rawSample.value[6] * 1e-3;
         // Parse raw 3D pose from the first six elements.
         Pose3d rawPose = parsePose(rawSample.value);
 
         poseObsList.add(new PoseObservation(
-            visionTimestamp,              // seconds
+            visionTimestamp, // seconds
             rawPose,
-            0.0,                // ambiguity is 0 (MegaTag2)
+            0.0, // ambiguity is 0 (MegaTag2)
             (int) rawSample.value[7],
-            rawSample.value[9]
-        ));
+            rawSample.value[9]));
       }
 
       if (bestTagId != null) {
@@ -190,18 +191,24 @@ public class VisionSubsystem extends SubsystemBase {
 
       // Process each pose observation.
       for (PoseObservation observation : poseObsList) {
-        // Filtering criteria: reject if no tags, high ambiguity (for one tag), unrealistic Z, or out-of-bounds.
+        // Filtering criteria: reject if no tags, high ambiguity (for one tag),
+        // unrealistic Z, or out-of-bounds.
         boolean rejectPose = (observation.tagCount() == 0)
             || (observation.tagCount() == 1 && observation.ambiguity() > VisionConstants.maxAmbiguity)
             || (Math.abs(observation.pose().getZ()) > VisionConstants.maxZError)
-            || (observation.pose().getX() < 0.0 || observation.pose().getX() > VisionConstants.aprilTagLayout.getFieldLength())
-            || (observation.pose().getY() < 0.0 || observation.pose().getY() > VisionConstants.aprilTagLayout.getFieldWidth());
-        if (rejectPose) continue;
+            || (observation.pose().getX() < 0.0
+                || observation.pose().getX() > VisionConstants.aprilTagLayout.getFieldLength())
+            || (observation.pose().getY() < 0.0
+                || observation.pose().getY() > VisionConstants.aprilTagLayout.getFieldWidth());
+        if (rejectPose)
+          continue;
 
         // Compute measurement uncertainties.
         double stdDevFactor = Math.pow(observation.averageTagDistance(), 2.0) / observation.tagCount();
-        double linearStdDev = VisionConstants.linearStdDevBaseline * stdDevFactor * VisionConstants.linearStdDevMegatag2Factor;
-        double angularStdDev = VisionConstants.angularStdDevBaseline * stdDevFactor * VisionConstants.angularStdDevMegatag2Factor;
+        double linearStdDev = VisionConstants.linearStdDevBaseline * stdDevFactor
+            * VisionConstants.linearStdDevMegatag2Factor;
+        double angularStdDev = VisionConstants.angularStdDevBaseline * stdDevFactor
+            * VisionConstants.angularStdDevMegatag2Factor;
         if (i < VisionConstants.cameraStdDevFactors.length) {
           linearStdDev *= VisionConstants.cameraStdDevFactors[i];
           angularStdDev *= VisionConstants.cameraStdDevFactors[i];
@@ -211,8 +218,7 @@ public class VisionSubsystem extends SubsystemBase {
         consumer.accept(
             observation.pose().toPose2d(),
             observation.timestamp(),
-            VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev)
-        );
+            VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev));
       }
     }
   }
@@ -231,9 +237,7 @@ public class VisionSubsystem extends SubsystemBase {
         new Rotation3d(
             Units.degreesToRadians(rawLLArray[3]),
             Units.degreesToRadians(rawLLArray[4]),
-            Units.degreesToRadians(rawLLArray[5])
-        )
-    );
+            Units.degreesToRadians(rawLLArray[5])));
   }
 
   /** Functional interface for receiving valid vision pose measurements. */
@@ -243,7 +247,8 @@ public class VisionSubsystem extends SubsystemBase {
   }
 
   /** Record representing a simple target observation (tx/ty). */
-  public static record TargetObservation(Rotation2d tx, Rotation2d ty) {}
+  public static record TargetObservation(Rotation2d tx, Rotation2d ty) {
+  }
 
   /** Record representing a vision pose observation from MegaTag2. */
   public static record PoseObservation(
@@ -251,6 +256,6 @@ public class VisionSubsystem extends SubsystemBase {
       Pose3d pose,
       double ambiguity,
       int tagCount,
-      double averageTagDistance
-  ) {}
+      double averageTagDistance) {
+  }
 }

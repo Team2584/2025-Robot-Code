@@ -15,7 +15,6 @@ package frc.robot.subsystems;
 
 import static frc.robot.Constants.*;
 
-
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VoltageOut;
@@ -30,15 +29,10 @@ import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.Command;
 
-
-
-
 public class RampSubsystem extends SubsystemBase {
 
   private final TalonFX ramp;
   private final TalonFXConfiguration rampConfigs = new TalonFXConfiguration();
-
-
 
   private final VoltageOut voltageRequest = new VoltageOut(0.0);
 
@@ -52,31 +46,30 @@ public class RampSubsystem extends SubsystemBase {
     rampConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     rampConfigs.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
-
     ramp.getConfigurator().apply(rampConfigs);
     ramp.setPosition(0);
   }
 
   /**
-  * Sets the climb to lift the robot at a contant speed
-  */
+   * Sets the climb to lift the robot at a contant speed
+   */
   public Command liftRamp() {
-    return runEnd(()->setVoltage(6), ()->setVoltage(0)).until(()->(ramp.getPosition().getValueAsDouble()>6.1));
+    return runEnd(() -> setVoltage(6), () -> setVoltage(0)).until(() -> (ramp.getPosition().getValueAsDouble() > 6.1));
   }
 
   /**
-  * Sets the climb to lower the robot at a contant speed
-  */
+   * Sets the climb to lower the robot at a contant speed
+   */
   public Command lowerRamp() {
-    return runEnd(()->setVoltage(-6), ()->setVoltage(0)).until(()->(ramp.getPosition().getValueAsDouble()<0.01));
+    return runEnd(() -> setVoltage(-6), () -> setVoltage(0))
+        .until(() -> (ramp.getPosition().getValueAsDouble() < 0.01));
   }
 
   /**
-  * Sets the climb Motor to run at a constant specified voltage
-  */
+   * Sets the climb Motor to run at a constant specified voltage
+   */
   public void setVoltage(double Volts) {
     ramp.setControl(voltageRequest.withOutput(Volts));
   }
 
-  
 }

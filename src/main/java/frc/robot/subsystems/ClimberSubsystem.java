@@ -15,7 +15,6 @@ package frc.robot.subsystems;
 
 import static frc.robot.Constants.*;
 
-
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -31,14 +30,10 @@ import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.Command;
 
-
-
 public class ClimberSubsystem extends SubsystemBase {
 
   private final TalonFX climber;
   private final TalonFXConfiguration climberConfigs = new TalonFXConfiguration();
-
-
 
   private final VoltageOut voltageRequest = new VoltageOut(0.0);
 
@@ -52,25 +47,24 @@ public class ClimberSubsystem extends SubsystemBase {
   }
 
   /**
-  * Sets the climb to lift the robot at a contant speed
-  */
+   * Sets the climb to lift the robot at a contant speed
+   */
   public Command liftRobot() {
-    return runEnd(()->setVoltage(6), ()->setVoltage(0));
+    return runEnd(() -> setVoltage(6), () -> setVoltage(0));
   }
 
   /**
-  * Sets the climb to lower the robot at a contant speed
-  */
+   * Sets the climb to lower the robot at a contant speed
+   */
   public Command lowerRobot() {
-    return runEnd(()->setVoltage(-6), ()->setVoltage(0));
+    return runEnd(() -> setVoltage(-6), () -> setVoltage(0));
   }
 
   /**
-  * Sets the climb Motor to run at a constant specified voltage
-  */
+   * Sets the climb Motor to run at a constant specified voltage
+   */
   public void setVoltage(double Volts) {
     climber.setControl(voltageRequest.withOutput(Volts));
   }
 
-  
 }

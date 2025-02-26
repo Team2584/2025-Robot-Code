@@ -30,21 +30,22 @@ import frc.robot.Telemetry;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.VisionSubsystem;
 
-
 /**
- * Drives relative to a tag offset of the largest tag seen by cameraIndex Limelight.
+ * Drives relative to a tag offset of the largest tag seen by cameraIndex
+ * Limelight.
  * This uses the global POSE ESTIMATION of the robot
  */
 
-public class DriveRelativeTag extends Command{
+public class DriveRelativeTag extends Command {
     private final CommandSwerveDrivetrain drivetrain;
     private final VisionSubsystem vision;
     private final Telemetry logger;
 
     PathPlannerPath path;
 
-    private final Translation2d relativeTagVector; // A pose2d that is referenced off the tag (ID'd from vision.getPrimaryTagId(cameraIndex))  
-    private final int cameraIndex;          // The camera being used
+    private final Translation2d relativeTagVector; // A pose2d that is referenced off the tag (ID'd from
+                                                   // vision.getPrimaryTagId(cameraIndex))
+    private final int cameraIndex; // The camera being used
 
     private FollowPathCommand followCommand;
 
@@ -53,7 +54,8 @@ public class DriveRelativeTag extends Command{
 
     private final PPHolonomicDriveController holonomicController;
 
-    public DriveRelativeTag(CommandSwerveDrivetrain drivetrain, VisionSubsystem vision, Telemetry logger, Translation2d relativeTagVector, int cameraIndex) {
+    public DriveRelativeTag(CommandSwerveDrivetrain drivetrain, VisionSubsystem vision, Telemetry logger,
+            Translation2d relativeTagVector, int cameraIndex) {
         this.drivetrain = drivetrain;
         this.vision = vision;
         this.logger = logger;
@@ -61,8 +63,8 @@ public class DriveRelativeTag extends Command{
         this.cameraIndex = cameraIndex;
 
         holonomicController = new PPHolonomicDriveController(
-            new PIDConstants(10, 0, 0),             // TRANSLATION PID
-            new PIDConstants(7, 0, 0)               // ROTATION PID
+                new PIDConstants(10, 0, 0), // TRANSLATION PID
+                new PIDConstants(7, 0, 0) // ROTATION PID
         );
 
         addRequirements(drivetrain, vision);
@@ -90,19 +92,15 @@ public class DriveRelativeTag extends Command{
 
         // Calculate target pose (using relativeTagVector)
         targetPose = new Pose2d(
-                                    new Translation2d(  
-                                        tagPose.getTranslation().getX() + 
-                                        relativeTagVector.getX()*Math.cos(tagPose.getRotation().getRadians()) -
-                                        relativeTagVector.getY()*Math.sin(tagPose.getRotation().getRadians()), 
-                                        
-                                        
-                                        
-                                        tagPose.getTranslation().getY() + 
-                                        relativeTagVector.getY()*Math.cos(tagPose.getRotation().getRadians()) +
-                                        relativeTagVector.getX()*Math.sin(tagPose.getRotation().getRadians())
-                                    ), 
-                                tagPose.getRotation().rotateBy(new Rotation2d(Math.PI)));
+                new Translation2d(
+                        tagPose.getTranslation().getX() +
+                                relativeTagVector.getX() * Math.cos(tagPose.getRotation().getRadians()) -
+                                relativeTagVector.getY() * Math.sin(tagPose.getRotation().getRadians()),
 
+                        tagPose.getTranslation().getY() +
+                                relativeTagVector.getY() * Math.cos(tagPose.getRotation().getRadians()) +
+                                relativeTagVector.getX() * Math.sin(tagPose.getRotation().getRadians())),
+                tagPose.getRotation().rotateBy(new Rotation2d(Math.PI)));
 
         // Log TargetPose
         SmartDashboard.putNumber("TargetPoseX", targetPose.getX());
@@ -114,27 +112,22 @@ public class DriveRelativeTag extends Command{
         // PATH CALCS
 
         Rotation2d travelDirection = Rotation2d.fromRadians(
-                Math.atan2(targetPose.getY() - startPose.getY(), targetPose.getX() - startPose.getX())
-        );
+                Math.atan2(targetPose.getY() - startPose.getY(), targetPose.getX() - startPose.getX()));
         Pose2d startWaypoint = new Pose2d(startPose.getTranslation(), travelDirection);
         Pose2d endWaypoint = new Pose2d(targetPose.getTranslation(), travelDirection);
 
         distanceToTarget = targetPose.getTranslation().getDistance(startPose.getTranslation());
 
-
-
         List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(
-            startWaypoint, endWaypoint
-        );
+                startWaypoint, endWaypoint);
 
         PathConstraints constraints = new PathConstraints(3.0, 3.0, 2 * Math.PI, 4 * Math.PI);
 
         path = new PathPlannerPath(
-            waypoints,
-            constraints,
-            null,
-            new GoalEndState(0.0, targetPose.getRotation())
-        );
+                waypoints,
+                constraints,
+                null,
+                new GoalEndState(0.0, targetPose.getRotation()));
 
         path.preventFlipping = true;
 
@@ -154,12 +147,11 @@ public class DriveRelativeTag extends Command{
                         }
                         return false;
                     },
-                    drivetrain
-            );
+                    drivetrain);
         } catch (Exception ex) {
-            DriverStation.reportError("Failed to load PathPlanner config and configure FollowPathCommand", ex.getStackTrace());
+            DriverStation.reportError("Failed to load PathPlanner config and configure FollowPathCommand",
+                    ex.getStackTrace());
         }
-
 
         followCommand.initialize();
     }
@@ -172,7 +164,7 @@ public class DriveRelativeTag extends Command{
 
     @Override
     public boolean isFinished() {
-        if (Math.abs(distanceToTarget) < 0.05){
+        if (Math.abs(distanceToTarget) < 0.05) {
             return true;
         }
         return false;
@@ -182,9 +174,9 @@ public class DriveRelativeTag extends Command{
     public void end(boolean interrupted) {
         followCommand.end(interrupted);
         drivetrain.setControl(
-            new SwerveRequest.FieldCentric()
-            .withVelocityX(0)
-            .withVelocityY(0)
-            .withRotationalRate(0));
+                new SwerveRequest.FieldCentric()
+                        .withVelocityX(0)
+                        .withVelocityY(0)
+                        .withRotationalRate(0));
     }
 }

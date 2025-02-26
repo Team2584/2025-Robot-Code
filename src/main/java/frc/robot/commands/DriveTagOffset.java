@@ -14,13 +14,13 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.VisionSubsystem;
 
-
 /**
- * Drives relative to a tag offset of the largest tag seen by cameraIndex Limelight.
+ * Drives relative to a tag offset of the largest tag seen by cameraIndex
+ * Limelight.
  * This uses the TAG for horizontal offset and distance to target.
  */
 
-public class DriveTagOffset extends Command{
+public class DriveTagOffset extends Command {
     private final CommandSwerveDrivetrain drivetrain;
     private final VisionSubsystem vision;
     private final Telemetry logger;
@@ -30,14 +30,13 @@ public class DriveTagOffset extends Command{
     private double sideOffset;
     private double TDISTANCE;
     private double forwardOffset;
-    
+
     private final PIDController PIDx;
     private final PIDController PIDy;
     private final PIDController PIDh;
 
-
-    public DriveTagOffset(CommandSwerveDrivetrain drivetrain, VisionSubsystem vision, Telemetry logger, 
-                          int cameraIndex, double sideOffset, double forwardOffset){
+    public DriveTagOffset(CommandSwerveDrivetrain drivetrain, VisionSubsystem vision, Telemetry logger,
+            int cameraIndex, double sideOffset, double forwardOffset) {
         this.drivetrain = drivetrain;
         this.vision = vision;
         this.logger = logger;
@@ -95,7 +94,7 @@ public class DriveTagOffset extends Command{
         double headingErorr = targetHeadingRad - currentHeadingRad;
 
         // Normalize error to the range [-180, 180] degrees.
-        headingErorr = ((headingErorr + Math.PI) % (2*Math.PI)) - Math.PI;
+        headingErorr = ((headingErorr + Math.PI) % (2 * Math.PI)) - Math.PI;
 
         // X & Y
         TX = vision.getTX(cameraIndex);
@@ -104,21 +103,20 @@ public class DriveTagOffset extends Command{
         // flip because Y is the side to side of robot; X is forward back of robot
         double velY = PIDx.calculate(sideOffset - TX);
         double velX = PIDy.calculate(TDISTANCE - forwardOffset);
-        double rotRate = PIDh.calculate(headingErorr);                          // NOT SETTING ROTATIONAL RATE (WILL TEST AFTER WORKING)
+        double rotRate = PIDh.calculate(headingErorr); // NOT SETTING ROTATIONAL RATE (WILL TEST AFTER WORKING)
 
         drivetrain.setControl(
-            new SwerveRequest.RobotCentric()
-            .withVelocityX(velX)
-            .withVelocityY(velY)
-            .withRotationalRate(0)
-            // .withRotationalRate(rotRate)
+                new SwerveRequest.RobotCentric()
+                        .withVelocityX(velX)
+                        .withVelocityY(velY)
+                        .withRotationalRate(0)
+        // .withRotationalRate(rotRate)
         );
     }
 
-
     @Override
     public boolean isFinished() {
-        if (Math.abs(TDISTANCE - forwardOffset) < 0.3 && Math.abs(sideOffset - TX) < 6){
+        if (Math.abs(TDISTANCE - forwardOffset) < 0.3 && Math.abs(sideOffset - TX) < 6) {
             return true;
         }
         return false;
@@ -127,9 +125,9 @@ public class DriveTagOffset extends Command{
     @Override
     public void end(boolean interrupted) {
         drivetrain.setControl(
-            new SwerveRequest.RobotCentric()
-            .withVelocityX(0)
-            .withVelocityY(0)
-            .withRotationalRate(0));
+                new SwerveRequest.RobotCentric()
+                        .withVelocityX(0)
+                        .withVelocityY(0)
+                        .withRotationalRate(0));
     }
 }

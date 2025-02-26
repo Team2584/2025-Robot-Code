@@ -23,14 +23,12 @@ public class IntakeCoral extends SequentialCommandGroup {
         this.wrist = robotContainer.getWrist();
         this.coral = robotContainer.getCoral();
 
-
-
         addCommands(
 
                 new ParallelCommandGroup(
                         elevator.moveToHeight(HOME),
                         coral.intakeCoral(),
-                        wrist.WristPose(-70)).until(()->coral.safeCoral())
+                        wrist.WristPose(-70)).until(() -> coral.safeCoral())
 
         );
 

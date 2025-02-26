@@ -34,24 +34,15 @@ public class NeutralState extends SequentialCommandGroup {
     addCommands(
 
         // new InstantCommand(() -> new DriveToPose(drive, () -> new Pose2d())),
-        
-        
+
         new ParallelCommandGroup(
-          algae.setSpeed(0),
-          coral.setSpeedCommand(0),
-          wrist.WristPose(-80),
-          elevator.moveToHeight(0)
-          ).withTimeout(1).andThen(new InstantCommand(()->elevator.homeElevatorLoop()))
-        
-        
-
-
-
-
-
+            algae.setSpeed(0),
+            coral.setSpeedCommand(0),
+            wrist.WristPose(-80),
+            elevator.moveToHeight(0)).withTimeout(1).andThen(new InstantCommand(() -> elevator.homeElevatorLoop()))
 
     );
-    
+
   }
 
 }
