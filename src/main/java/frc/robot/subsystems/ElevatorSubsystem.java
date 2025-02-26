@@ -36,6 +36,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -48,6 +49,7 @@ public class ElevatorSubsystem extends SubsystemBase{
   /* Hardware */
   private final TalonFX leader;
   private final TalonFX follower;
+  private final DigitalInput elevatorZeroLimit;
 
   /* Configs */
   private static final TalonFXConfiguration leaderConfiguration = new TalonFXConfiguration();
@@ -63,7 +65,7 @@ public class ElevatorSubsystem extends SubsystemBase{
   TunableDashboardNumber kG = new TunableDashboardNumber("Elevator/kG", 0.0);
   TunableDashboardNumber kA = new TunableDashboardNumber("Elevator/kA", 0.01);
   TunableDashboardNumber kV = new TunableDashboardNumber("Elevator/kV", 0.3);
-  TunableDashboardNumber kP = new TunableDashboardNumber("Elevator/kP", 12);
+  TunableDashboardNumber kP = new TunableDashboardNumber("Elevator/kP", 8);
   TunableDashboardNumber kI = new TunableDashboardNumber("Elevator/kI", 0.0);
   TunableDashboardNumber kD = new TunableDashboardNumber("Elevator/kD", 0.01);
 
@@ -81,8 +83,11 @@ public class ElevatorSubsystem extends SubsystemBase{
 
   public ElevatorSubsystem() {
     /* Instantiate motors and configurators */
-    this.leader = new TalonFX(ElevatorConstants.ELEVATOR_LEFT_ID);
-    this.follower = new TalonFX(ElevatorConstants.ELEVATOR_RIGHT_ID);
+    this.leader = new TalonFX(ElevatorConstants.ELEVATOR_RIGHT_ID);
+    this.follower = new TalonFX(ElevatorConstants.ELEVATOR_LEFT_ID);
+
+    elevatorZeroLimit = new DigitalInput(9);
+
 
     FeedbackConfigs fdb = leaderConfiguration.Feedback;
     fdb.SensorToMechanismRatio = ElevatorConstants.ELEVATOR_GEAR_RATIO;
@@ -125,7 +130,7 @@ public class ElevatorSubsystem extends SubsystemBase{
     BaseStatusSignal.setUpdateFrequencyForAll(
         100, supplyLeft, supplyRight, closedLoopReferenceSlope);
 
-    follower.setControl(new Follower(ElevatorConstants.ELEVATOR_LEFT_ID, false));
+    follower.setControl(new Follower(ElevatorConstants.ELEVATOR_LEFT_ID, true));
 
   }
 
@@ -158,6 +163,7 @@ public class ElevatorSubsystem extends SubsystemBase{
   */
   public void resetHeight(double newHeightInches) {
     leader.setPosition(inchesToRotations(newHeightInches));
+    follower.setPosition(inchesToRotations(newHeightInches));
   }
 
   public void updateTunableNumbers() {
@@ -183,6 +189,23 @@ public class ElevatorSubsystem extends SubsystemBase{
 
       leader.getConfigurator().apply(leaderConfiguration,0.25);
     }
+  }
+
+  public boolean isZero(){
+    return !elevatorZeroLimit.get(); // Returns true if Zero
+  }
+
+  public void homeElevator(){
+    if (isZero()){
+      resetHeight(0);
+    }
+    else{
+      return;
+    }
+  }
+  
+  public Command homeElevatorCommand(){
+    return runOnce(()->homeElevator());
   }
 
   /**
@@ -216,6 +239,9 @@ public class ElevatorSubsystem extends SubsystemBase{
   @Override
   public void periodic() {
       SmartDashboard.putNumber("Elevator Position", rotationsToInches(leader.getPosition().getValueAsDouble()));
+      SmartDashboard.putBoolean("Elevator isZero", isZero());
+
+
       // This method will be called once per scheduler run
   }
   

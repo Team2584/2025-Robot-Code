@@ -7,14 +7,20 @@ import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.SignalLogger;
+import com.ctre.phoenix6.hardware.jni.HardwareJNI.Context;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.path.EventMarker;
 
+import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.cscore.UsbCamera;
+import edu.wpi.first.cscore.VideoSink;
+import edu.wpi.first.cscore.VideoSource.ConnectionStrategy;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -32,6 +38,7 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.CoralSubsystem;
 import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.RampSubsystem;
+import frc.robot.subsystems.USBCameraSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
 import frc.robot.subsystems.WristSubsystem;
 import frc.robot.subsystems.AlgaeSubsystem;
@@ -105,7 +112,12 @@ public class RobotContainer {
       logger::getHeading,
 
       // Limelight NetworkTable names
-      VisionConstants.camera0Name);
+      VisionConstants.camera0Name,
+      VisionConstants.camera1Name);
+  }
+
+  private USBCameraSubsystem buildUSBCams() {
+    return new USBCameraSubsystem();
   }
 
   public CommandSwerveDrivetrain getDrivetrain(){
@@ -143,6 +155,9 @@ public class RobotContainer {
   public VisionSubsystem getVision(){
     return vision;
   }
+  public USBCameraSubsystem getUSBCams(){
+    return usbCams;
+  }
   
   
   private final AlgaeSubsystem algae;
@@ -152,6 +167,7 @@ public class RobotContainer {
   private final ClimberSubsystem climber;
   private final RampSubsystem ramp;
   private final VisionSubsystem vision;
+  private final USBCameraSubsystem usbCams;
 
 
   // Map buttons to trigger variables
@@ -167,6 +183,7 @@ public class RobotContainer {
 
   
   public RobotContainer() {
+
     
     // Subsystem initialization
     algae = buildAlgaeMech();
@@ -176,6 +193,7 @@ public class RobotContainer {
     climber = buildClimberSubsystem();
     ramp = buildRampSubsystem();
     vision = buildVisionSubsystem();
+    usbCams =  buildUSBCams();
 
     //Pathplanner Named Commands (MUST BE DECLARED HERE AND HAVE THE SAME NAME)
     NamedCommands.registerCommand("netAlgae", new NetAlgae(this).withTimeout(1));
@@ -199,6 +217,10 @@ public class RobotContainer {
 
     SmartDashboard.putData("Auto Mode", autoChooser);
     SmartDashboard.putData("Field", m_field);
+
+    usbCams.setCamera(1);
+
+    
 
     configureBindings();
   }
@@ -241,32 +263,33 @@ public class RobotContainer {
     // joystick.y().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
     /* MICHAEL WAY OF CORAL */
-    joystick.rightBumper().and(joystick.povRight()).onTrue(new ScoreCoralState(this,L4)).onFalse(new NeutralState(this)).onFalse(new NeutralState(this));
-    joystick.rightTrigger().and(joystick.povRight()).onTrue(new ScoreCoralState(this,L3)).onFalse(new NeutralState(this)).onFalse(new NeutralState(this));
-    joystick.leftBumper().and(joystick.povRight()).onTrue(new ScoreCoralState(this,L2)).onFalse(new NeutralState(this)).onFalse(new NeutralState(this));
-    joystick.leftTrigger().and(joystick.povRight()).onTrue(new ScoreCoralState(this,L1)).onFalse(new NeutralState(this)).onFalse(new NeutralState(this));
+    joystick.rightBumper().and(joystick.povRight()).onTrue(new ScoreCoralState(this,L4)).onFalse(new NeutralState(this));
+    joystick.rightTrigger().and(joystick.povRight()).onTrue(new ScoreCoralState(this,L3)).onFalse(new NeutralState(this));
+    joystick.leftBumper().and(joystick.povRight()).onTrue(new ScoreCoralState(this,L2)).onFalse(new NeutralState(this));
+    joystick.leftTrigger().and(joystick.povRight()).onTrue(new ScoreCoralState(this,L1)).onFalse(new NeutralState(this));
 
 
     /* Michael Way of Algae */
-    joystick.rightBumper().and(joystick.povLeft()).onTrue( new ScoreCoralState(this,NET)).onFalse(new NeutralState(this));
-    joystick.rightTrigger().and(joystick.povLeft()).onTrue( new ScoreCoralState(this,ALGAE_HIGH)).onFalse(new NeutralState(this));
-    joystick.leftBumper().and(joystick.povLeft()).onTrue( new ScoreCoralState(this,ALGAE_LOW)).onFalse(new NeutralState(this));
-    joystick.leftTrigger().and(joystick.povLeft()).onTrue( new ScoreCoralState(this,GROUND_ALGAE)).onFalse(new NeutralState(this));
+    joystick.rightBumper().and(joystick.povLeft()).onTrue( new NetAlgae(this)).onFalse(new NeutralState(this));
+    joystick.rightTrigger().and(joystick.povLeft()).onTrue(new PickupReefAlgaeState(this,ALGAE_HIGH).until(() -> algae.holdingAlgae()).finallyDo(()->new NeutralAlgae(this))).onFalse(new NeutralAlgae(this));
+    joystick.leftBumper().and(joystick.povLeft()).onTrue( new PickupReefAlgaeState(this,ALGAE_LOW).until(() -> algae.holdingAlgae()).finallyDo(()->new NeutralAlgae(this))).onFalse(new NeutralAlgae(this));
+    joystick.leftTrigger().and(joystick.povLeft()).onTrue(new PickupReefAlgae(elevator,wrist,algae,GROUND_ALGAE,30).until(() -> algae.holdingAlgae()).finallyDo(()->new NeutralAlgae(this))).onFalse(new NeutralAlgae(this));
     
 
     // Left
     blue4.whileTrue(new DriveRelativeTag(getDrivetrain(), 
                                                       getVision(), 
                                                       logger, 
-                                                      new Translation2d(.3,-.7), 
+                                                      new Translation2d(.25,0), 
                                                       0));
 
     // Right
     redL4.whileTrue(new DriveRelativeTag(getDrivetrain(), 
                                                       getVision(), 
                                                       logger, 
-                                                      new Translation2d(.3,.7), 
+                                                      new Translation2d(.25,0), 
                                                       0));
+                                                      
 
     /* RUSH WAY OF CORAL */
     // redL4.onTrue(
@@ -322,12 +345,12 @@ public class RobotContainer {
     //   )
     // );
 
-    // joystick.povRight().whileTrue(climber.lowerRobot()); // Lower Climb
-    // joystick.povLeft().whileTrue(climber.liftRobot()); // Lift Climb
+    joystick.povDown().whileTrue(climber.lowerRobot()); // Lower Climb
 
-    // joystick.povUp().onTrue(ramp.liftRamp()); // Ramp Up Control
-    // joystick.povDown().onTrue(ramp.lowerRamp()); // Ramp Down Control
+    joystick.y().onTrue(new ParallelCommandGroup(ramp.liftRamp(),climber.lowerRobot(),usbCams.setCameraCommand(2))); // Ramp Up Control
 
+
+ 
     
 
 

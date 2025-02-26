@@ -2,9 +2,7 @@ package frc.robot.commands;
 
 import static edu.wpi.first.units.Units.Rotation;
 
-import java.sql.Time;
 import java.util.List;
-import java.util.Timer;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.commands.FollowPathCommand;
@@ -23,12 +21,20 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.Telemetry;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.VisionSubsystem;
+
+
+/**
+ * Drives relative to a tag offset of the largest tag seen by cameraIndex Limelight.
+ * This uses the global POSE ESTIMATION of the robot
+ */
 
 public class DriveRelativeTag extends Command{
     private final CommandSwerveDrivetrain drivetrain;
@@ -42,8 +48,8 @@ public class DriveRelativeTag extends Command{
 
     private FollowPathCommand followCommand;
 
-    private double totalTime;
-    private final Timer timer = new Timer();
+    private double distanceToTarget;
+    Pose2d targetPose;
 
     private final PPHolonomicDriveController holonomicController;
 
@@ -83,20 +89,24 @@ public class DriveRelativeTag extends Command{
         Pose2d tagPose = maybeTagPose.get();
 
         // Calculate target pose (using relativeTagVector)
-        Pose2d targetPose = new Pose2d(
+        targetPose = new Pose2d(
                                     new Translation2d(  
                                         tagPose.getTranslation().getX() + 
                                         relativeTagVector.getX()*Math.cos(tagPose.getRotation().getRadians()) -
-                                        relativeTagVector.getY()*Math.cos(tagPose.getRotation().getRadians()), 
+                                        relativeTagVector.getY()*Math.sin(tagPose.getRotation().getRadians()), 
                                         
                                         
                                         
                                         tagPose.getTranslation().getY() + 
-                                        relativeTagVector.getY()*Math.sin(tagPose.getRotation().getRadians()) +
+                                        relativeTagVector.getY()*Math.cos(tagPose.getRotation().getRadians()) +
                                         relativeTagVector.getX()*Math.sin(tagPose.getRotation().getRadians())
                                     ), 
                                 tagPose.getRotation().rotateBy(new Rotation2d(Math.PI)));
 
+
+        // Log TargetPose
+        SmartDashboard.putNumber("TargetPoseX", targetPose.getX());
+        SmartDashboard.putNumber("TargetPoseY", targetPose.getY());
 
         // Get the robot's starting pose.
         Pose2d startPose = new Pose2d(logger.getPose().getTranslation(), logger.getPose().getRotation());
@@ -108,6 +118,10 @@ public class DriveRelativeTag extends Command{
         );
         Pose2d startWaypoint = new Pose2d(startPose.getTranslation(), travelDirection);
         Pose2d endWaypoint = new Pose2d(targetPose.getTranslation(), travelDirection);
+
+        distanceToTarget = targetPose.getTranslation().getDistance(startPose.getTranslation());
+
+
 
         List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(
             startWaypoint, endWaypoint
@@ -145,22 +159,28 @@ public class DriveRelativeTag extends Command{
         } catch (Exception ex) {
             DriverStation.reportError("Failed to load PathPlanner config and configure FollowPathCommand", ex.getStackTrace());
         }
+
+
         followCommand.initialize();
     }
 
     @Override
-    public void execute() {     
+    public void execute() {
+        distanceToTarget = targetPose.getTranslation().getDistance(logger.getPose().getTranslation());
         followCommand.execute();
     }
 
     @Override
     public boolean isFinished() {
+        if (Math.abs(distanceToTarget) < 0.05){
+            return true;
+        }
         return false;
     }
 
     @Override
     public void end(boolean interrupted) {
-        // followCommand.end(interrupted);
+        followCommand.end(interrupted);
         drivetrain.setControl(
             new SwerveRequest.FieldCentric()
             .withVelocityX(0)
