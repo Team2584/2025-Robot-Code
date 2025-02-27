@@ -229,11 +229,7 @@ public class RobotContainer {
     SmartDashboard.putData("Field", m_field);
 
     usbCams.setCamera(1);
-
-
-    candle.incrementAnimation();
     
-
     configureBindings();
   }
 
