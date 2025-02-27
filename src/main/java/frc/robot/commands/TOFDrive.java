@@ -16,6 +16,7 @@ import static edu.wpi.first.units.Units.Second;
 
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Constants;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.WristSubsystem;
@@ -55,7 +56,8 @@ public class TOFDrive extends Command {
 
     @Override
     public boolean isFinished() {
-        if (TOFDriveSensor.getDistance().getValueAsDouble() < distance){ 
+        if (TOFDriveSensor.getDistance().getValueAsDouble() < distance && 
+            TOFDriveSensor.getDistance().getValueAsDouble() > Constants.DOF_MIN_DIST){ 
             return true;
         }
         return false;
