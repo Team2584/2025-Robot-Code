@@ -21,7 +21,8 @@ import frc.robot.subsystems.VisionSubsystem;
  */
 
 public class DriveTagOffset extends Command {
-    private final CommandSwerveDrivetrain drivetrain;
+    private final CommandSwerveDrivetrain drivetrain; 
+    private final SwerveRequest.RobotCentric RCdrive; 
     private final VisionSubsystem vision;
     private final Telemetry logger;
     private final int cameraIndex;
@@ -35,9 +36,10 @@ public class DriveTagOffset extends Command {
     private final PIDController PIDy;
     private final PIDController PIDh;
 
-    public DriveTagOffset(CommandSwerveDrivetrain drivetrain, VisionSubsystem vision, Telemetry logger,
+    public DriveTagOffset(CommandSwerveDrivetrain drivetrain, SwerveRequest.RobotCentric RCdrive, VisionSubsystem vision, Telemetry logger,
             int cameraIndex, double sideOffset, double forwardOffset) {
         this.drivetrain = drivetrain;
+        this.RCdrive = RCdrive;
         this.vision = vision;
         this.logger = logger;
         this.cameraIndex = cameraIndex;
@@ -45,13 +47,13 @@ public class DriveTagOffset extends Command {
         this.sideOffset = sideOffset;
         this.forwardOffset = forwardOffset;
 
-        PIDx = new PIDController(6, 0.0, 0.0);
+        PIDx = new PIDController(9, 0.0, 0.0);
         PIDx.setSetpoint(0.0);
 
-        PIDy = new PIDController(6, 0.0, 0.0);
+        PIDy = new PIDController(9, 0.0, 0.0);
         PIDy.setSetpoint(0.0);
 
-        PIDh = new PIDController(3, 0.0, 0.0);
+        PIDh = new PIDController(5, 0.0, 0.0);
         PIDh.setSetpoint(0.0);
 
         addRequirements(drivetrain, vision);
@@ -105,13 +107,10 @@ public class DriveTagOffset extends Command {
         double velX = PIDy.calculate(TDISTANCE - forwardOffset);
         double rotRate = PIDh.calculate(headingErorr); // NOT SETTING ROTATIONAL RATE (WILL TEST AFTER WORKING)
 
-        drivetrain.setControl(
-                new SwerveRequest.RobotCentric()
-                        .withVelocityX(velX)
-                        .withVelocityY(velY)
-                        .withRotationalRate(0)
-        // .withRotationalRate(rotRate)
-        );
+        drivetrain.applyRequest(() -> RCdrive
+            .withVelocityX(velX)
+            .withVelocityY(velY)
+            .withRotationalRate(rotRate));
     }
 
     @Override
@@ -124,10 +123,9 @@ public class DriveTagOffset extends Command {
 
     @Override
     public void end(boolean interrupted) {
-        drivetrain.setControl(
-                new SwerveRequest.RobotCentric()
-                        .withVelocityX(0)
-                        .withVelocityY(0)
-                        .withRotationalRate(0));
+        drivetrain.applyRequest(() -> RCdrive
+            .withVelocityX(0)
+            .withVelocityY(0)
+            .withRotationalRate(0));
     }
 }
