@@ -1,6 +1,7 @@
 package frc.robot.commands;
 
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.controller.PIDController;
@@ -22,7 +23,8 @@ import frc.robot.subsystems.VisionSubsystem;
 
 public class DriveTagOffset extends Command {
     private final CommandSwerveDrivetrain drivetrain; 
-    private final SwerveRequest.RobotCentric RCdrive; 
+    private final SwerveRequest.RobotCentric robotCentricDrive = new SwerveRequest.RobotCentric()
+      .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
     private final VisionSubsystem vision;
     private final Telemetry logger;
     private final int cameraIndex;
@@ -36,10 +38,9 @@ public class DriveTagOffset extends Command {
     private final PIDController PIDy;
     private final PIDController PIDh;
 
-    public DriveTagOffset(CommandSwerveDrivetrain drivetrain, SwerveRequest.RobotCentric RCdrive, VisionSubsystem vision, Telemetry logger,
+    public DriveTagOffset(CommandSwerveDrivetrain drivetrain, VisionSubsystem vision, Telemetry logger,
             int cameraIndex, double sideOffset, double forwardOffset) {
         this.drivetrain = drivetrain;
-        this.RCdrive = RCdrive;
         this.vision = vision;
         this.logger = logger;
         this.cameraIndex = cameraIndex;
@@ -107,15 +108,12 @@ public class DriveTagOffset extends Command {
         double velX = PIDy.calculate(TDISTANCE - forwardOffset);
         double rotRate = PIDh.calculate(headingErorr); // NOT SETTING ROTATIONAL RATE (WILL TEST AFTER WORKING)
 
-        drivetrain.applyRequest(() -> RCdrive
-            .withVelocityX(velX)
-            .withVelocityY(velY)
-            .withRotationalRate(rotRate));
+        drivetrain.setControl(robotCentricDrive.withVelocityX(20).withVelocityY(0));
     }
 
     @Override
     public boolean isFinished() {
-        if (Math.abs(TDISTANCE - forwardOffset) < 0.3 && Math.abs(sideOffset - TX) < 6) {
+        if (Math.abs(TDISTANCE - forwardOffset) < 0.3 && Math.abs(sideOffset - TX) < 1) {
             return true;
         }
         return false;
@@ -123,9 +121,6 @@ public class DriveTagOffset extends Command {
 
     @Override
     public void end(boolean interrupted) {
-        drivetrain.applyRequest(() -> RCdrive
-            .withVelocityX(0)
-            .withVelocityY(0)
-            .withRotationalRate(0));
+        drivetrain.setControl(robotCentricDrive.withVelocityX(0).withVelocityY(0).withRotationalRate(0));
     }
 }

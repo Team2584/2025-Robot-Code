@@ -56,8 +56,7 @@ public class TOFDrive extends Command {
 
     @Override
     public boolean isFinished() {
-        if (TOFDriveSensor.getDistance().getValueAsDouble() < distance && 
-            TOFDriveSensor.getDistance().getValueAsDouble() > Constants.DOF_MIN_DIST){ 
+        if (TOFDriveSensor.getDistance().getValueAsDouble() < distance){ 
             return true;
         }
         return false;
