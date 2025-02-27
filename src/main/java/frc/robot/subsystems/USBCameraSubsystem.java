@@ -38,16 +38,20 @@ import edu.wpi.first.wpilibj2.command.Command;
 
 public class USBCameraSubsystem extends SubsystemBase {
 
-  private final UsbCamera camera1;
+  // private final UsbCamera camera1;
   private final UsbCamera camera2;
   private final VideoSink server;
 
   public USBCameraSubsystem() {
 
     // Camera initialization
-    camera1 = CameraServer.startAutomaticCapture(0);
+    // camera1 = CameraServer.startAutomaticCapture(0);
     camera2 = CameraServer.startAutomaticCapture(1);
     server = CameraServer.getServer();
+
+    // camera1.setResolution(800, 600);
+
+    
   }
 
   /**
@@ -56,22 +60,31 @@ public class USBCameraSubsystem extends SubsystemBase {
   public void setCamera(int cameraId) {
     if (cameraId == 1) {
       System.out.println("Setting camera 1");
-      server.setSource(camera1);
+      server.setSource(camera2);
     } else if (cameraId == 2) {
       System.out.println("Setting camera 2");
       server.setSource(camera2);
     }
   }
+  // public void setCamera(int cameraId) {
+  //   if (cameraId == 1) {
+  //     System.out.println("Setting camera 1");
+  //     server.setSource(camera1);
+  //   } else if (cameraId == 2) {
+  //     System.out.println("Setting camera 2");
+  //     server.setSource(camera2);
+  //   }
+  // }
 
   public Command setCameraCommand(int cameraId) {
     if (cameraId == 1) {
       System.out.println("Setting camera 1");
-      return runOnce(() -> server.setSource(camera1));
+      return runOnce(() -> server.setSource(camera2));
     } else if (cameraId == 2) {
       System.out.println("Setting camera 2");
       return runOnce(() -> server.setSource(camera2));
     }
-    return runOnce(() -> server.setSource(camera1));
+    return runOnce(() -> server.setSource(camera2));
 
   }
 

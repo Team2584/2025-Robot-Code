@@ -34,7 +34,7 @@ public class AlgaeSubsystem extends SubsystemBase {
      * Resets speed to zero when holding an Algae or when not being called.
      */
     public Command intakeCommand() {
-        return runEnd(() -> setClawSpeed(-0.25), () -> setClawSpeed(0)).until(() -> holdingAlgae());
+        return runEnd(() -> setClawSpeed(-0.25), () -> setClawSpeed(0));
     }
 
     public Command setSpeed(double speed) {
@@ -56,12 +56,11 @@ public class AlgaeSubsystem extends SubsystemBase {
      * 
      */
     public boolean holdingAlgae() {
-        double clawCurrent = claw.getStatorCurrent().getValueAsDouble();
         double clawSpeed = claw.getVelocity().getValueAsDouble();
-        SmartDashboard.putNumber("Algae Current", clawCurrent);
+        double clawCurrent = claw.getStatorCurrent().getValueAsDouble();
         SmartDashboard.putNumber("Algae Speed", clawSpeed);
-        // System.out.println("INTAKE CURRENT: " + clawCurrent);
-        if (clawCurrent > 100) {
+        System.out.println("INTAKE CURRENT: " + clawCurrent);
+        if (clawSpeed == 0 && clawCurrent>18 ) {
             return true;
         }
         return false;

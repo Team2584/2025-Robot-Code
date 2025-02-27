@@ -31,7 +31,7 @@ public class PickupReefAlgae extends SequentialCommandGroup {
         new ParallelCommandGroup(
             wrist.WristPose(angle).withTimeout(0.6),
             new InstantCommand(() -> elevator.setHeight(algaeHeight)),
-            new InstantCommand(() -> algae.setClawSpeed(-0.25))).until(() -> algae.holdingAlgae())
+            new InstantCommand(() -> algae.setClawSpeed(-0.25)))
 
     );
 

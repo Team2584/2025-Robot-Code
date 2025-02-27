@@ -31,7 +31,7 @@ public class ScoreCoralState extends ParallelCommandGroup{
 
     addCommands(
         
-        new driveWithSpeed(drivetrain, joystick, 0.1),
+        new driveWithSpeed(drivetrain, joystick, 0.08),
 
         new ScoreCoral(elevator, wrist, coral, coralLevel)
 
