@@ -5,6 +5,8 @@ import edu.wpi.first.apriltag.AprilTagFields;
 
 public class Constants {
 
+  public static final int DRIVETOF_ID = 30;
+
   public static final class ElevatorConstants {
     /* CAN IDs */
     public static final int ELEVATOR_LEFT_ID = 21;

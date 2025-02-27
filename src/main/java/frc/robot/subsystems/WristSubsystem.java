@@ -129,6 +129,6 @@ public class WristSubsystem extends SubsystemBase {
 
     @Override
     public void simulationPeriodic() {
-        System.out.println("Wrist voltage: " + wrist.getMotorVoltage());
+        
     }
 }

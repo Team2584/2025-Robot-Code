@@ -76,7 +76,7 @@ public class RobotContainer {
       .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
   private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
   private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
-  private final SwerveRequest.RobotCentric forwardStraight = new SwerveRequest.RobotCentric()
+  private final SwerveRequest.RobotCentric robotCentricDrive = new SwerveRequest.RobotCentric()
       .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
   /* Path follower */
@@ -326,9 +326,9 @@ public class RobotContainer {
     //joystick.rightBumper().onTrue(new IntakeCoral(this)); // RUSH WAY OF INTAKE
     joystick.a().whileTrue(new ParallelCommandGroup(coral.shootCoral(), algae.outtakeCommand())); // RUSH WAY OF OUTTAKE
 
-    joystick.x().onTrue(new InstantCommand(()->CameraServer.startAutomaticCapture(1)).andThen((new IntakeCoral(this)))); // Michael WAY OF INTAKE
+    joystick.x().onTrue(new ParallelCommandGroup(new InstantCommand(()->usbCams.setCamera(1)),ramp.lowerRamp().withTimeout(0.25),new IntakeCoral(this))); // Michael WAY OF INTAKE
     // joystick.a().whileTrue(new ParallelCommandGroup(coral.shootCoral(), algae.outtakeCommand())); // Michael WAY OF OUTTAKE
-    joystick.b().onTrue(ramp.lowerRamp().withTimeout(0.1));
+    joystick.b().onTrue(new TOFDrive(drivetrain, 1  ,0.17 ));
     // joystick.leftTrigger().whileTrue(new
     // driveWithSpeed(drivetrain,joystick,0.2)); // Slow Mode
     // joystick.leftBumper().whileTrue(
@@ -347,7 +347,7 @@ public class RobotContainer {
 
     joystick.back().whileTrue(climber.liftRobot()); // Lift Robot (Winch in)
 
-    joystick.start().whileTrue(new ParallelCommandGroup(ramp.liftRamp(), climber.lowerRobot(), new InstantCommand(()->CameraServer.startAutomaticCapture(1)))); // Ramp
+    joystick.start().whileTrue(new ParallelCommandGroup(ramp.liftRamp(), climber.lowerRobot(), new InstantCommand(()->usbCams.setCamera(2)))); // Ramp
                                                                                                                        // Up
                                                                                                                        // Control
 

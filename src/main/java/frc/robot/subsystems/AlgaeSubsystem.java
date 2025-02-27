@@ -56,11 +56,11 @@ public class AlgaeSubsystem extends SubsystemBase {
      * 
      */
     public boolean holdingAlgae() {
-        double clawSpeed = claw.getVelocity().getValueAsDouble();
+        double clawSpeed = -claw.getVelocity().getValueAsDouble();
         double clawCurrent = claw.getStatorCurrent().getValueAsDouble();
         SmartDashboard.putNumber("Algae Speed", clawSpeed);
-        System.out.println("INTAKE CURRENT: " + clawCurrent);
-        if (clawSpeed == 0 && clawCurrent>18 ) {
+        SmartDashboard.putNumber("AlgaeIntakeCur", clawCurrent);
+        if (clawSpeed <0.25 && clawCurrent>18 ) {
             return true;
         }
         return false;
@@ -78,12 +78,13 @@ public class AlgaeSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         holdingAlgae();
+        SmartDashboard.putBoolean("holdingAlgae?", holdingAlgae());
         // This method will be called once per scheduler run
     }
 
     @Override
     public void simulationPeriodic() {
-        System.out.println("AlgaeIntake voltage: " + claw.getMotorVoltage());
+        
 
     }
 }
