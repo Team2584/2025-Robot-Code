@@ -2,8 +2,22 @@
   "robotWidth": 0.89,
   "robotLength": 0.89,
   "holonomicMode": true,
-  "pathFolders": [],
-  "autoFolders": [],
+  "pathFolders": [
+    "BackMidCoral&Algae",
+    "D&KPostsCoralAlgae",
+    "HPostCoralAlgae",
+    "KPostCoralAlgae",
+    "Lolipop1",
+    "BargeClose",
+    "NonBargeClose"
+  ],
+  "autoFolders": [
+    "BackBargeSide",
+    "BackNonBargeSide",
+    "Center",
+    "CloseNonBargeSide",
+    "CloseBargeSide"
+  ],
   "defaultMaxVel": 3.0,
   "defaultMaxAccel": 3.0,
   "defaultMaxAngVel": 540.0,

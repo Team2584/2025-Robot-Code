@@ -39,7 +39,6 @@ import frc.robot.subsystems.CoralSubsystem;
 import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.RampSubsystem;
 import frc.robot.subsystems.USBCameraSubsystem;
-import frc.robot.subsystems.VisionSubsystem;
 import frc.robot.subsystems.WristSubsystem;
 import frc.robot.subsystems.AlgaeSubsystem;
 import frc.robot.subsystems.ClimberSubsystem;
@@ -53,9 +52,10 @@ import frc.robot.commandgroup.*;
 
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 
 public class RobotContainer {
-  private double governor = 0.35; // Added to slow MaxSpeed to 35%. Set to 1 for full speed.
+  private double governor = 0.40; // Added to slow MaxSpeed to 35%. Set to 1 for full speed.
   private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12VoltsMps desired top speed
   private double MaxAngularRate = RotationsPerSecond.of(1 * Math.PI).in(RadiansPerSecond); // 1/2 of a rotation per
                                                                                            // second max angular
@@ -75,7 +75,7 @@ public class RobotContainer {
       .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
   private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
   private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
-  private final SwerveRequest.RobotCentric forwardStraight = new SwerveRequest.RobotCentric()
+  private final SwerveRequest.RobotCentric robotCentricDrive = new SwerveRequest.RobotCentric()
       .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
   /* Path follower */
@@ -102,25 +102,17 @@ public class RobotContainer {
   private ClimberSubsystem buildClimberSubsystem() {
     return new ClimberSubsystem();
   }
+
   private RampSubsystem buildRampSubsystem() {
     return new RampSubsystem();
   }
 
-  private VisionSubsystem buildVisionSubsystem(){
-    return new VisionSubsystem(
-      drivetrain::addVisionMeasurement,
-      logger::getHeading,
-
-      // Limelight NetworkTable names
-      VisionConstants.camera0Name,
-      VisionConstants.camera1Name);
-  }
 
   private USBCameraSubsystem buildUSBCams() {
     return new USBCameraSubsystem();
   }
 
-  public CommandSwerveDrivetrain getDrivetrain(){
+  public CommandSwerveDrivetrain getDrivetrain() {
     return drivetrain;
   }
 
@@ -148,27 +140,22 @@ public class RobotContainer {
     return ramp;
   }
 
-  public CommandXboxController getJoystick(){
+  public CommandXboxController getJoystick() {
     return joystick;
   }
 
-  public VisionSubsystem getVision(){
-    return vision;
-  }
-  public USBCameraSubsystem getUSBCams(){
+
+  public USBCameraSubsystem getUSBCams() {
     return usbCams;
   }
-  
-  
+
   private final AlgaeSubsystem algae;
   private final CoralSubsystem coral;
   private final WristSubsystem wrist;
   private final ElevatorSubsystem elevator;
   private final ClimberSubsystem climber;
   private final RampSubsystem ramp;
-  private final VisionSubsystem vision;
   private final USBCameraSubsystem usbCams;
-
 
   // Map buttons to trigger variables
   private final JoystickButton redL4 = new JoystickButton(buttonBoard, 1);
@@ -181,46 +168,41 @@ public class RobotContainer {
   private final JoystickButton blue2 = new JoystickButton(buttonBoard, 7);
   private final JoystickButton blue1 = new JoystickButton(buttonBoard, 8);
 
-  
   public RobotContainer() {
 
-    
     // Subsystem initialization
     algae = buildAlgaeMech();
-    coral = buildCoralMech(); 
+    coral = buildCoralMech();
     wrist = buildWrist();
     elevator = buildElevatorSubsystem();
     climber = buildClimberSubsystem();
     ramp = buildRampSubsystem();
-    vision = buildVisionSubsystem();
-    usbCams =  buildUSBCams();
+    usbCams = buildUSBCams();
 
-    //Pathplanner Named Commands (MUST BE DECLARED HERE AND HAVE THE SAME NAME)
+    // Pathplanner Named Commands (MUST BE DECLARED HERE AND HAVE THE SAME NAME)
     NamedCommands.registerCommand("netAlgae", new NetAlgae(this).withTimeout(1));
     NamedCommands.registerCommand("wrist60Deg", wrist.WristPose(-60).withTimeout(0.3));
     NamedCommands.registerCommand("shootAlgae", algae.outtakeCommand());
-    NamedCommands.registerCommand("liftLowAlgae", new PickupReefAlgaeState(this,ALGAE_LOW).withTimeout(1));
+    NamedCommands.registerCommand("liftLowAlgae", new PickupReefAlgaeState(this, ALGAE_LOW).withTimeout(1));
     NamedCommands.registerCommand("algaeNeutral", new NeutralAlgae(this).withTimeout(1));
-    NamedCommands.registerCommand("liftL4", new ScoreCoralState(this,L4).withTimeout(0.5));
-    NamedCommands.registerCommand("liftL3", new ScoreCoralState(this,L3).withTimeout(0.3));
+    NamedCommands.registerCommand("liftL4", new ScoreCoralState(this, L4).withTimeout(0.5));
+    NamedCommands.registerCommand("liftL3", new ScoreCoralState(this, L3).withTimeout(0.3));
     NamedCommands.registerCommand("scoreCoral", coral.shootCoral().withTimeout(0.3));
-    NamedCommands.registerCommand("liftHighAlgae", new PickupReefAlgaeState(this,ALGAE_HIGH).withTimeout(1));
+    NamedCommands.registerCommand("liftHighAlgae", new PickupReefAlgaeState(this, ALGAE_HIGH).withTimeout(1.5));
     NamedCommands.registerCommand("liftNet", new NetAlgae(this));
     NamedCommands.registerCommand("scoreNet", algae.outtakeCommand().withTimeout(0.3));
     NamedCommands.registerCommand("neutral", new NeutralState(this).withTimeout(0.5));
-    NamedCommands.registerCommand("pickupLolipop", new PickupReefAlgae(elevator,wrist,algae,GROUND_ALGAE,0).withTimeout(1));
+    NamedCommands.registerCommand("pickupLolipop",
+        new PickupReefAlgae(elevator, wrist, algae, GROUND_ALGAE, 0).withTimeout(1));
     NamedCommands.registerCommand("intakeCoral", coral.intakeCoral());
-    
+    NamedCommands.registerCommand("driveTOF", new TOFDrive(drivetrain,0.5,0.17));
 
     autoChooser = AutoBuilder.buildAutoChooser("line");
-
 
     SmartDashboard.putData("Auto Mode", autoChooser);
     SmartDashboard.putData("Field", m_field);
 
     usbCams.setCamera(1);
-
-    
 
     configureBindings();
   }
@@ -257,103 +239,102 @@ public class RobotContainer {
     // redL3.whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
     // redL2.whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
     // redL1.whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
-    
-    
+
     // reset the field-centric heading on left bumper press
     // joystick.y().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
     /* MICHAEL WAY OF CORAL */
-    joystick.rightBumper().and(joystick.povRight()).onTrue(new ScoreCoralState(this,L4)).onFalse(new NeutralState(this));
-    joystick.rightTrigger().and(joystick.povRight()).onTrue(new ScoreCoralState(this,L3)).onFalse(new NeutralState(this));
-    joystick.leftBumper().and(joystick.povRight()).onTrue(new ScoreCoralState(this,L2)).onFalse(new NeutralState(this));
-    joystick.leftTrigger().and(joystick.povRight()).onTrue(new ScoreCoralState(this,L1)).onFalse(new NeutralState(this));
-
+    // joystick.rightBumper().and(joystick.povRight()).onTrue(new ScoreCoralState(this, L4))
+    //     .onFalse(new NeutralState(this));
+    // joystick.rightTrigger().and(joystick.povRight()).onTrue(new ScoreCoralState(this, L3))
+    //     .onFalse(new NeutralState(this));
+    // joystick.leftBumper().and(joystick.povRight()).onTrue(new ScoreCoralState(this, L2))
+    //     .onFalse(new NeutralState(this));
+    // joystick.leftTrigger().and(joystick.povRight()).onTrue(new ScoreCoralState(this, L1))
+    //     .onFalse(new NeutralState(this));
 
     /* Michael Way of Algae */
-    joystick.rightBumper().and(joystick.povLeft()).onTrue( new NetAlgae(this)).onFalse(new NeutralState(this));
-    joystick.rightTrigger().and(joystick.povLeft()).onTrue(new PickupReefAlgaeState(this,ALGAE_HIGH).until(() -> algae.holdingAlgae()).finallyDo(()->new NeutralAlgae(this))).onFalse(new NeutralAlgae(this));
-    joystick.leftBumper().and(joystick.povLeft()).onTrue( new PickupReefAlgaeState(this,ALGAE_LOW).until(() -> algae.holdingAlgae()).finallyDo(()->new NeutralAlgae(this))).onFalse(new NeutralAlgae(this));
-    joystick.leftTrigger().and(joystick.povLeft()).onTrue(new PickupReefAlgae(elevator,wrist,algae,GROUND_ALGAE,30).until(() -> algae.holdingAlgae()).finallyDo(()->new NeutralAlgae(this))).onFalse(new NeutralAlgae(this));
-    
+    // joystick.rightBumper().and(joystick.povLeft()).onTrue(new NetAlgae(this)).onFalse(new NeutralState(this));
+    // joystick.rightTrigger().and(joystick.povLeft()).onTrue(new PickupReefAlgaeState(this, ALGAE_HIGH)
+    //     .until(() -> algae.holdingAlgae()).finallyDo(() -> new NeutralAlgae(this))).onFalse(new NeutralAlgae(this));
+    // joystick.leftBumper().and(joystick.povLeft()).onTrue(new PickupReefAlgaeState(this, ALGAE_LOW)
+    //     .until(() -> algae.holdingAlgae()).finallyDo(() -> new NeutralAlgae(this))).onFalse(new NeutralAlgae(this));
+    // joystick.leftTrigger().and(joystick.povLeft()).onTrue(new PickupReefAlgae(elevator, wrist, algae, GROUND_ALGAE, 30)
+    //     .until(() -> algae.holdingAlgae()).finallyDo(() -> new NeutralAlgae(this))).onFalse(new NeutralAlgae(this));
 
-    // Left
-    blue4.whileTrue(new DriveRelativeTag(getDrivetrain(), 
-                                                      getVision(), 
-                                                      logger, 
-                                                      new Translation2d(.25,0), 
-                                                      0));
+    // // Left
+    // blue4.whileTrue(new DriveRelativeTag(getDrivetrain(),
+    //     getVision(),
+    //     logger,
+    //     new Translation2d(.25, 0),
+    //     0));
 
-    // Right
-    redL4.whileTrue(new DriveRelativeTag(getDrivetrain(), 
-                                                      getVision(), 
-                                                      logger, 
-                                                      new Translation2d(.25,0), 
-                                                      0));
-                                                      
+    // // Right
+    // redL4.whileTrue(new DriveRelativeTag(getDrivetrain(),
+    //     getVision(),
+    //     logger,
+    //     new Translation2d(.25, 0),
+    //     0));
 
     /* RUSH WAY OF CORAL */
-    // redL4.onTrue(
-    //   new ScoreCoralState(this,L4)).onFalse(new NeutralState(this)
-    // );
-    // redL3.onTrue(
-    //   new ScoreCoralState(this,L3)).onFalse(new NeutralState(this)
-    // );
-    // redL2.onTrue(
-    //   new ScoreCoralState(this,L2)).onFalse(new NeutralState(this)
-    // );
-    // redL1.onTrue(
-    //   new ScoreCoralState(this,L1)).onFalse(new NeutralState(this)
-    // );
-   
+    redL4.onTrue(
+    new ScoreCoralState(this,L4)).onFalse(new NeutralState(this)
+    );
+    redL3.onTrue(
+    new ScoreCoralState(this,L3)).onFalse(new NeutralState(this)
+    );
+    redL2.onTrue(
+    new ScoreCoralState(this,L2)).onFalse(new NeutralState(this)
+    );
+    redL1.onTrue(
+    new ScoreCoralState(this,L1)).onFalse(new NeutralState(this)
+    );
+
+
 
     /* RUSH WAY OF ALGAE */
-    // blue4.onTrue(
-    //     new NetAlgae(this)).onFalse(new NeutralState(this));
+    blue4.onTrue(
+    new NetAlgae(this)).onFalse(new NeutralState(this));
 
-    // blue3.onTrue(
-    //     new PickupReefAlgaeState(this,ALGAE_HIGH).until(() -> algae.holdingAlgae())
-    //         .finallyDo(()->new NeutralAlgae(this)))
-    //     .onFalse(new NeutralAlgae(this));
+    blue3.onTrue(
+    new PickupReefAlgaeState(this,ALGAE_HIGH)).onFalse(new NeutralAlgae(this));
 
-    // blue2.onTrue(
-    //     new PickupReefAlgaeState(this,ALGAE_LOW).until(() -> algae.holdingAlgae())
-    //       .finallyDo(()->new NeutralAlgae(this)))
-    //     .onFalse(new NeutralAlgae(this));
+    blue2.onTrue(
+    new PickupReefAlgaeState(this,ALGAE_LOW)).onFalse(new NeutralAlgae(this));
 
-    // blue1.onTrue(
-    //     new PickupReefAlgae(elevator,wrist,algae,GROUND_ALGAE,30).until(() -> algae.holdingAlgae())
-    //       .finallyDo(()->new NeutralAlgae(this)))
-    //     .onFalse(new NeutralAlgae(this));
+    blue1.onTrue(
+      new PickupReefAlgae(elevator,wrist,algae,GROUND_ALGAE,30)).onFalse(new NeutralAlgae(this));
 
- 
+    // blue1.and(()->algae.holdingAlgae()).onTrue(
+    //   wrist.WristPose(0))
+    //   .onFalse(new NeutralAlgae(this));
 
-
-    // joystick.rightBumper().onTrue(new IntakeCoral(this)); // RUSH WAY OF INTAKE
-    // joystick.rightTrigger().whileTrue(new ParallelCommandGroup(coral.shootCoral(), algae.outtakeCommand())); // RUSH WAY OF OUTTAKE
-    
-    joystick.x().onTrue(new IntakeCoral(this)); // RUSH WAY OF INTAKE
+    //joystick.rightBumper().onTrue(new IntakeCoral(this)); // RUSH WAY OF INTAKE
     joystick.a().whileTrue(new ParallelCommandGroup(coral.shootCoral(), algae.outtakeCommand())); // RUSH WAY OF OUTTAKE
 
-    // joystick.leftTrigger().whileTrue(new driveWithSpeed(drivetrain,joystick,0.2)); // Slow Mode
+    joystick.x().onTrue(new ParallelCommandGroup(new InstantCommand(()->usbCams.setCamera(1)),ramp.lowerRamp(),new IntakeCoral(this))); // Michael WAY OF INTAKE
+    // joystick.a().whileTrue(new ParallelCommandGroup(coral.shootCoral(), algae.outtakeCommand())); // Michael WAY OF OUTTAKE
+    // joystick.leftTrigger().whileTrue(new
+    // driveWithSpeed(drivetrain,joystick,0.2)); // Slow Mode
     // joystick.leftBumper().whileTrue(
-    //   new ParallelTag(
-    //       drivetrain,
-    //       vision,
-    //       logger,
-    //       () -> -joystick.getLeftY() * MaxSpeed * governor,
-    //       () -> -joystick.getLeftX() * MaxSpeed * governor
-    //   )
+    // new ParallelTag(
+    // drivetrain,
+    // vision,
+    // logger,
+    // () -> -joystick.getLeftY() * MaxSpeed * governor,
+    // () -> -joystick.getLeftX() * MaxSpeed * governor
+    // )
     // );
 
-    joystick.povDown().whileTrue(climber.lowerRobot()); // Lower Climb
+    joystick.leftTrigger().onTrue(new driveWithSpeed(drivetrain,joystick,0.05));
 
-    joystick.y().onTrue(new ParallelCommandGroup(ramp.liftRamp(),climber.lowerRobot(),usbCams.setCameraCommand(2))); // Ramp Up Control
+    joystick.rightTrigger().onTrue(new driveWithSpeed(drivetrain,joystick,0.40));
 
+    joystick.back().whileTrue(climber.liftRobot()); // Lift Robot (Winch in)
 
- 
-    
-
-
+    joystick.start().whileTrue(new ParallelCommandGroup(ramp.liftRamp(), climber.lowerRobot(), new InstantCommand(()->usbCams.setCamera(2)))); // Ramp
+                                                                                                                       // Up
+                                                                                                                       // Control
 
     drivetrain.registerTelemetry(logger::telemeterize);
   }

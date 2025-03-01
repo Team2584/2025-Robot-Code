@@ -27,15 +27,12 @@ public class NetAlgae extends SequentialCommandGroup {
         this.elevator = robotContainer.getElevator();
         this.wrist = robotContainer.getWrist();
         this.algae = robotContainer.getAlgaeMech();
-        
-
 
         addCommands(
 
-            new ParallelCommandGroup(
-                wrist.WristPose(-60),
-                elevator.moveToHeight(Constants.ElevatorConstants.NET)
-                ).withTimeout(1)
+                new ParallelCommandGroup(
+                        wrist.WristPose(-60),
+                        elevator.moveToHeight(Constants.ElevatorConstants.NET)).withTimeout(1)
 
         );
 

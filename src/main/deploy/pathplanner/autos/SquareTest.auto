@@ -7,37 +7,25 @@
         {
           "type": "path",
           "data": {
-            "pathName": "MiddleStartCoral"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 1.0
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "liftL4"
+            "pathName": "SquareSide1"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "approachCoralScore"
+            "pathName": "SquareSide2"
           }
         },
         {
-          "type": "wait",
+          "type": "path",
           "data": {
-            "waitTime": 2.0
+            "pathName": "SquareSide3"
           }
         },
         {
-          "type": "named",
+          "type": "path",
           "data": {
-            "name": "scoreL4"
+            "pathName": "SquareSide4"
           }
         }
       ]

@@ -22,8 +22,7 @@ public class WristToPos extends Command {
     private double setpointAngle;
     private double allowed_error;
 
-
-    public WristToPos (WristSubsystem wristSubsystem, double setpointAngle){
+    public WristToPos(WristSubsystem wristSubsystem, double setpointAngle) {
         this.wristSubsystem = wristSubsystem;
         this.setpointAngle = setpointAngle;
         this.allowed_error = 5;
@@ -32,21 +31,20 @@ public class WristToPos extends Command {
     }
 
     @Override
-    public void initialize(){
+    public void initialize() {
 
         MotionMagicConfigs mm = wristSubsystem.getWristConfig().MotionMagic;
         mm.withMotionMagicCruiseVelocity(RotationsPerSecond.of(12))
-        .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(20))
-        .withMotionMagicJerk(RotationsPerSecondPerSecond.per(Second).of(60));
-
+                .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(20))
+                .withMotionMagicJerk(RotationsPerSecondPerSecond.per(Second).of(60));
 
         Slot0Configs slot0 = wristSubsystem.getWristConfig().Slot0;
         slot0.kS = 0.235; // volts
         slot0.kV = 1; // volts * seconds / distance
         slot0.kA = 0.01; // volts * seconds^2 / distance
-        slot0.kP = 12;  // proportional
-        slot0.kI = 0;    // integral
-        slot0.kD = 0.01;  // derivative
+        slot0.kP = 12; // proportional
+        slot0.kI = 0; // integral
+        slot0.kD = 0.01; // derivative
         slot0.kG = 0;
         slot0.GravityType = GravityTypeValue.Arm_Cosine;
         wristSubsystem.getWristMotor().getConfigurator().apply(wristSubsystem.getWristConfig());
@@ -54,7 +52,8 @@ public class WristToPos extends Command {
 
     @Override
     public void execute() {
-        wristSubsystem.getWristMotor().setControl(wristSubsystem.getMMVCont().withPosition(Units.degreesToRotations(setpointAngle)));
+        wristSubsystem.getWristMotor()
+                .setControl(wristSubsystem.getMMVCont().withPosition(Units.degreesToRotations(setpointAngle)));
     }
 
     @Override
@@ -64,10 +63,12 @@ public class WristToPos extends Command {
 
     @Override
     public boolean isFinished() {
-        if (Units.rotationsToDegrees(wristSubsystem.getWristMotor().getPosition().getValueAsDouble()) < setpointAngle+allowed_error && 
-            Units.rotationsToDegrees(wristSubsystem.getWristMotor().getPosition().getValueAsDouble()) > setpointAngle-allowed_error ){
-                return true;
-            }
+        if (Units.rotationsToDegrees(wristSubsystem.getWristMotor().getPosition().getValueAsDouble()) < setpointAngle
+                + allowed_error &&
+                Units.rotationsToDegrees(wristSubsystem.getWristMotor().getPosition()
+                        .getValueAsDouble()) > setpointAngle - allowed_error) {
+            return true;
+        }
         return false;
     }
 

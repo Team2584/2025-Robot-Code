@@ -19,24 +19,22 @@ import edu.wpi.first.wpilibj2.command.WrapperCommand;
 
 public class PickupReefAlgae extends SequentialCommandGroup {
 
-  public PickupReefAlgae(ElevatorSubsystem elevator, WristSubsystem wrist, AlgaeSubsystem algae, double algaeHeight, double angle) {
+  public PickupReefAlgae(ElevatorSubsystem elevator, WristSubsystem wrist, AlgaeSubsystem algae, double algaeHeight,
+      double angle) {
 
     addRequirements(wrist, algae, elevator);
 
     addCommands(
 
         // new InstantCommand(() -> new DriveToPose(drive, () -> new Pose2d())),
-        
+
         new ParallelCommandGroup(
             wrist.WristPose(angle).withTimeout(0.6),
-            new InstantCommand(()->elevator.setHeight(algaeHeight)),
-            new InstantCommand(()->algae.setClawSpeed(-0.25))
-            ).until(()->algae.holdingAlgae())
-            
-            
+            new InstantCommand(() -> elevator.setHeight(algaeHeight)),
+            new InstantCommand(() -> algae.setClawSpeed(-0.4)))
+
     );
-        
-    
+
   }
 
 }

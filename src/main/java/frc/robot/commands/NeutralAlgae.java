@@ -27,19 +27,17 @@ public class NeutralAlgae extends ParallelCommandGroup {
     this.elevator = robotContainer.getElevator();
     this.wrist = robotContainer.getWrist();
     this.algae = robotContainer.getAlgaeMech();
-    
 
     addCommands(
 
         // new InstantCommand(() -> new DriveToPose(drive, () -> new Pose2d())),
-        
-        algae.setSpeed(-0.05),
+
+        algae.setSpeed(-0.25),
         wrist.WristPose(-60).withTimeout(0.7),
-        elevator.moveToHeight(0).withTimeout(1).andThen( new InstantCommand(()->elevator.homeElevator()))
-        
+        elevator.moveToHeight(0).withTimeout(1.5).andThen(new InstantCommand(() -> elevator.homeElevator()))
 
     );
-    
+
   }
 
 }

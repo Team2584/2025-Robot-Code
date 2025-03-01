@@ -7,7 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "MiddleStartCoral"
+            "pathName": "StartBargeCloseJ"
           }
         },
         {
@@ -19,13 +19,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "approachCoralScoreL4"
+            "pathName": "ApproachJCoral"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "driveTOF"
           }
         },
         {
           "type": "wait",
           "data": {
-            "waitTime": 0.175
+            "waitTime": 0.125
           }
         },
         {
@@ -37,19 +43,19 @@
         {
           "type": "wait",
           "data": {
-            "waitTime": 0.15
+            "waitTime": 0.05
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "CoralToAlgae"
+            "pathName": "JCoraltoAlgae"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "liftLowAlgae"
+            "name": "liftHighAlgae"
           }
         },
         {
@@ -61,25 +67,25 @@
         {
           "type": "path",
           "data": {
-            "pathName": "retrieveAlgae"
+            "pathName": "RetrieveAlgaeBargeClose"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "BackupAlgae"
+            "pathName": "BackupAlgaeBargeClose"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "wrist60Deg"
+            "name": "algaeNeutral"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Score MidAlgae"
+            "pathName": "ScoreAlgaeBargeClose"
           }
         },
         {
@@ -95,21 +101,59 @@
           }
         },
         {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.2
+          }
+        },
+        {
           "type": "named",
           "data": {
             "name": "neutral"
           }
         },
         {
-          "type": "path",
+          "type": "parallel",
           "data": {
-            "pathName": "ReturntoMid"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "StartToLolipop"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "pickupLolipop"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "ScoreLolipop"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "algaeNeutral"
+                }
+              }
+            ]
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "Center",
+  "folder": "CloseBargeSide",
   "choreoAuto": false
 }

@@ -20,47 +20,47 @@ public class AlgaeSubsystem extends SubsystemBase {
 
         claw.getConfigurator().apply(clawConfig);
     }
-    
+
     /**
      * Sets the Algae intake to spin in reverse while being called.
      * Resets speed to zero when not being called.
      */
-    public Command outtakeCommand(){
-        return runEnd(()->setClawSpeed(0.5),()->setClawSpeed(0));
+    public Command outtakeCommand() {
+        return runEnd(() -> setClawSpeed(0.5), () -> setClawSpeed(0));
     }
 
     /**
      * Sets the Algae intake to spin forward while being called.
      * Resets speed to zero when holding an Algae or when not being called.
      */
-    public Command intakeCommand(){
-        return runEnd(()->setClawSpeed(-0.25),()->setClawSpeed(0)).until(()->holdingAlgae());
+    public Command intakeCommand() {
+        return runEnd(() -> setClawSpeed(-0.4), () -> setClawSpeed(0));
     }
 
-    public Command setSpeed(double speed){
-        return run(()->setClawSpeed(speed));
+    public Command setSpeed(double speed) {
+        return run(() -> setClawSpeed(speed));
     }
 
-
-     /**
-     * Sets the speed of the Claw motor 
+    /**
+     * Sets the speed of the Claw motor
      */
-    public void setClawSpeed(double speed){
+    public void setClawSpeed(double speed) {
         claw.set(speed);
     }
-    
+
     /**
-     * Checks if claw motor is stalling/is experiencing a current spike due to successful intake
+     * Checks if claw motor is stalling/is experiencing a current spike due to
+     * successful intake
+     * 
      * @return Whether or not the intake is holding an Algae
      * 
      */
-    public boolean holdingAlgae(){
+    public boolean holdingAlgae() {
+        double clawSpeed = -claw.getVelocity().getValueAsDouble();
         double clawCurrent = claw.getStatorCurrent().getValueAsDouble();
-        double clawSpeed = claw.getVelocity().getValueAsDouble();
-        SmartDashboard.putNumber("Algae Current",clawCurrent);
-        SmartDashboard.putNumber("Algae Speed",clawSpeed);
-        // System.out.println("INTAKE CURRENT: " + clawCurrent);
-        if (clawCurrent > 100){
+        SmartDashboard.putNumber("Algae Speed", clawSpeed);
+        SmartDashboard.putNumber("AlgaeIntakeCur", clawCurrent);
+        if (clawSpeed <0.25 && clawCurrent>18 ) {
             return true;
         }
         return false;
@@ -71,20 +71,20 @@ public class AlgaeSubsystem extends SubsystemBase {
      *
      * @return TalonFX
      */
-    public TalonFX getClawMotor(){
+    public TalonFX getClawMotor() {
         return claw;
     }
-
 
     @Override
     public void periodic() {
         holdingAlgae();
+        SmartDashboard.putBoolean("holdingAlgae?", holdingAlgae());
         // This method will be called once per scheduler run
     }
 
     @Override
     public void simulationPeriodic() {
-        System.out.println("AlgaeIntake voltage: " + claw.getMotorVoltage());
-    
+        
+
     }
 }

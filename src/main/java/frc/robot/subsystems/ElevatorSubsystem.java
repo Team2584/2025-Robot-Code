@@ -15,7 +15,6 @@ package frc.robot.subsystems;
 
 import frc.robot.Constants.*;
 
-
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -44,7 +43,7 @@ import frc.robot.util.TunableDashboardNumber;
 
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
-public class ElevatorSubsystem extends SubsystemBase{
+public class ElevatorSubsystem extends SubsystemBase {
 
   /* Hardware */
   private final TalonFX leader;
@@ -56,7 +55,6 @@ public class ElevatorSubsystem extends SubsystemBase{
   private Slot0Configs slot0Configs;
   private final MotionMagicConfigs motionMagicConfigs;
   private final MotionMagicExpoVoltage motionProfileReq;
-
 
   private double setpoint;
 
@@ -88,12 +86,10 @@ public class ElevatorSubsystem extends SubsystemBase{
 
     elevatorZeroLimit = new DigitalInput(9);
 
-
     FeedbackConfigs fdb = leaderConfiguration.Feedback;
     fdb.SensorToMechanismRatio = ElevatorConstants.ELEVATOR_GEAR_RATIO;
-    motionProfileReq = new MotionMagicExpoVoltage(0); //This is the motion profile, all setControl must target position based on this (m_)
-
-
+    motionProfileReq = new MotionMagicExpoVoltage(0); // This is the motion profile, all setControl must target position
+                                                      // based on this (m_)
 
     this.leader.setPosition(0);
 
@@ -103,7 +99,7 @@ public class ElevatorSubsystem extends SubsystemBase{
     leaderConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     leaderConfiguration.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
-    slot0Configs = leaderConfiguration.Slot0; //PID Gains
+    slot0Configs = leaderConfiguration.Slot0; // PID Gains
     slot0Configs.kP = kP.get(); // Adjust based on your elevator's needs
     slot0Configs.kI = kI.get();
     slot0Configs.kD = kD.get();
@@ -113,19 +109,18 @@ public class ElevatorSubsystem extends SubsystemBase{
     slot0Configs.kS = kS.get(); // Static friction compensation
 
     motionMagicConfigs = leaderConfiguration.MotionMagic;
-    motionMagicConfigs.MotionMagicCruiseVelocity =  motionCruiseVelocity.get();// Rotations per second
+    motionMagicConfigs.MotionMagicCruiseVelocity = motionCruiseVelocity.get();// Rotations per second
     motionMagicConfigs.MotionMagicExpo_kV = mm_kV.get(); // kV is around 0.12 V/rps
-    //motionMagicConfigs.MotionMagicExpo_kA = mm_kA.get(); // Use a slower kA of 0.1 V/(rps/s)
-
+    // motionMagicConfigs.MotionMagicExpo_kA = mm_kA.get(); // Use a slower kA of
+    // 0.1 V/(rps/s)
 
     /* Apply Configs */
-    leader.getConfigurator().apply(leaderConfiguration,0.25);
-
+    leader.getConfigurator().apply(leaderConfiguration, 0.25);
 
     // Set up signal monitoring
     supplyLeft = leader.getSupplyCurrent();
     supplyRight = follower.getSupplyCurrent();
-    closedLoopReferenceSlope= leader.getClosedLoopReferenceSlope();
+    closedLoopReferenceSlope = leader.getClosedLoopReferenceSlope();
 
     BaseStatusSignal.setUpdateFrequencyForAll(
         100, supplyLeft, supplyRight, closedLoopReferenceSlope);
@@ -135,8 +130,8 @@ public class ElevatorSubsystem extends SubsystemBase{
   }
 
   /**
-  * Sets the new target height for the elevator to PID to
-  */
+   * Sets the new target height for the elevator to PID to
+   */
   public void setHeight(double heightInches) {
     if (!DriverStation.isEnabled()) {
       return;
@@ -145,22 +140,22 @@ public class ElevatorSubsystem extends SubsystemBase{
     leader.setControl(motionProfileReq.withPosition(inchesToRotations(heightInches)));
   }
 
-  public Command moveToHeight(double heightInches){
+  public Command moveToHeight(double heightInches) {
     setpoint = heightInches;
-    return runOnce(()->leader.setControl(motionProfileReq.withPosition(inchesToRotations(heightInches))));
+    return runOnce(() -> leader.setControl(motionProfileReq.withPosition(inchesToRotations(heightInches))));
   }
-  
 
   /**
-  * Sets the climb Motors to run at a specified voltage
-  */
+   * Sets the climb Motors to run at a specified voltage
+   */
   public void setVoltage(double volts) {
     leader.setControl(new VoltageOut(volts));
   }
 
   /**
-  * Reseeds the motor by setting the current height of the elevator to a specified value.
-  */
+   * Reseeds the motor by setting the current height of the elevator to a
+   * specified value.
+   */
   public void resetHeight(double newHeightInches) {
     leader.setPosition(inchesToRotations(newHeightInches));
     follower.setPosition(inchesToRotations(newHeightInches));
@@ -177,73 +172,77 @@ public class ElevatorSubsystem extends SubsystemBase{
         || motionCruiseVelocity.hasChanged(0)) {
       slot0Configs.kS = kS.get();
       slot0Configs.kG = kG.get();
-      slot0Configs.kA = kA.get(); 
+      slot0Configs.kA = kA.get();
       slot0Configs.kV = kV.get();
       slot0Configs.kP = kP.get();
       slot0Configs.kI = kI.get();
       slot0Configs.kD = kD.get();
 
-      motionMagicConfigs.MotionMagicCruiseVelocity =  motionCruiseVelocity.get();// Rotations per second
-      motionMagicConfigs.MotionMagicExpo_kV = mm_kV.get(); 
-      motionMagicConfigs.MotionMagicExpo_kA = mm_kA.get(); 
+      motionMagicConfigs.MotionMagicCruiseVelocity = motionCruiseVelocity.get();// Rotations per second
+      motionMagicConfigs.MotionMagicExpo_kV = mm_kV.get();
+      motionMagicConfigs.MotionMagicExpo_kA = mm_kA.get();
 
-      leader.getConfigurator().apply(leaderConfiguration,0.25);
+      leader.getConfigurator().apply(leaderConfiguration, 0.25);
     }
   }
 
-  public boolean isZero(){
+  public boolean isZero() {
     return !elevatorZeroLimit.get(); // Returns true if Zero
   }
 
-  public void homeElevator(){
-    if (isZero()){
+  public void homeElevator() {
+    if (isZero()) {
       resetHeight(0);
-    }
-    else{
+    } else {
       return;
     }
   }
-  
-  public Command homeElevatorCommand(){
-    return runOnce(()->homeElevator());
+
+  public void homeElevatorLoop() {
+    while (!isZero()) {
+      continue;
+    }
+    resetHeight(0);
+  }
+
+  public Command homeElevatorCommand() {
+    return runOnce(() -> resetHeight(0));
   }
 
   /**
-  * Gets the current height of the elevator in inches
-  */
+   * Gets the current height of the elevator in inches
+   */
   private double getHeight() {
     return rotationsToInches(leader.getPosition().getValueAsDouble());
   }
 
   /**
-  * Gets the current velocity of the elevator in inches per second
-  */
+   * Gets the current velocity of the elevator in inches per second
+   */
   private double getVelocity() {
     return rotationsToInches(leader.getVelocity().getValueAsDouble());
   }
 
   /**
-  * Converts from inches to rotations of the elevator pulley
-  */
+   * Converts from inches to rotations of the elevator pulley
+   */
   private double inchesToRotations(double heightInches) {
     return (heightInches / (Math.PI * ElevatorConstants.ELEVATOR_PULLEY_PITCH_DIAMETER));
-}
+  }
 
   /**
-  * Converts from rotations of the elevator pulley to inches 
-  */
+   * Converts from rotations of the elevator pulley to inches
+   */
   private double rotationsToInches(double rotations) {
     return rotations * (Math.PI * ElevatorConstants.ELEVATOR_PULLEY_PITCH_DIAMETER);
   }
 
   @Override
   public void periodic() {
-      SmartDashboard.putNumber("Elevator Position", rotationsToInches(leader.getPosition().getValueAsDouble()));
-      SmartDashboard.putBoolean("Elevator isZero", isZero());
+    SmartDashboard.putNumber("Elevator Position", rotationsToInches(leader.getPosition().getValueAsDouble()));
+    SmartDashboard.putBoolean("Elevator isZero", isZero());
 
-
-      // This method will be called once per scheduler run
+    // This method will be called once per scheduler run
   }
-  
-  
+
 }

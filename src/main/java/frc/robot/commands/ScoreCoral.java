@@ -10,8 +10,6 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 
-
-
 public class ScoreCoral extends SequentialCommandGroup {
 
   public ScoreCoral(ElevatorSubsystem elevator, WristSubsystem wrist, CoralSubsystem coral, double coralLevel) {
@@ -21,12 +19,11 @@ public class ScoreCoral extends SequentialCommandGroup {
     addCommands(
 
         new ParallelCommandGroup(
-          new InstantCommand(()->elevator.setHeight(coralLevel))).withTimeout(1),
-          wrist.WristPose(-68)
-
+            new InstantCommand(() -> elevator.setHeight(coralLevel))).withTimeout(1),
+        wrist.WristPose(-68)
 
     );
-    
+
   }
 
 }
