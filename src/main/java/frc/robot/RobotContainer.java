@@ -102,11 +102,7 @@ public class RobotContainer {
   private VisionSubsystem buildVisionSubsystem(){
     return new VisionSubsystem(
       drivetrain::addVisionMeasurement,
-      logger::getHeading,
-
-      // Limelight NetworkTable names
-      VisionConstants.camera0Name,
-      VisionConstants.camera1Name);
+      logger::getHeading);
   }
 
   public CommandSwerveDrivetrain getDrivetrain(){
@@ -256,18 +252,19 @@ public class RobotContainer {
     
 
     // Left
-    blue4.whileTrue(new DriveRelativeTag(getDrivetrain(), 
+    joystick.a().whileTrue(new DriveTagOffset(getDrivetrain(), 
                                                       getVision(), 
-                                                      logger, 
-                                                      new Translation2d(.25,0), 
-                                                      0));
+                                                      logger,
+                                                      0,
+                                                      0, 
+                                                      1));
 
-    // Right
-    redL4.whileTrue(new DriveRelativeTag(getDrivetrain(), 
-                                                      getVision(), 
-                                                      logger, 
-                                                      new Translation2d(.25,0), 
-                                                      0));
+    // // Right
+    // redL4.whileTrue(new DriveRelativeTag(getDrivetrain(), 
+    //                                                   getVision(), 
+    //                                                   logger, 
+    //                                                   new Translation2d(.25,0), 
+    //                                                   0));
 
     /* RUSH WAY OF CORAL */
     // redL4.onTrue(
@@ -303,14 +300,14 @@ public class RobotContainer {
     //       .finallyDo(()->new NeutralAlgae(this)))
     //     .onFalse(new NeutralAlgae(this));
 
- 
+    // blue1.onTrue(new InstantCommand(()->drivetrain.getPigeon2().setYaw(LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(VisionConstants.camera0Name).pose.getRotation().getDegrees())));
 
 
     // joystick.rightBumper().onTrue(new IntakeCoral(this)); // RUSH WAY OF INTAKE
     // joystick.rightTrigger().whileTrue(new ParallelCommandGroup(coral.shootCoral(), algae.outtakeCommand())); // RUSH WAY OF OUTTAKE
     
     joystick.x().onTrue(new IntakeCoral(this)); // RUSH WAY OF INTAKE
-    joystick.a().whileTrue(new ParallelCommandGroup(coral.shootCoral(), algae.outtakeCommand())); // RUSH WAY OF OUTTAKE
+    // joystick.a().whileTrue(new ParallelCommandGroup(coral.shootCoral(), algae.outtakeCommand())); // RUSH WAY OF OUTTAKE
 
     // joystick.leftTrigger().whileTrue(new driveWithSpeed(drivetrain,joystick,0.2)); // Slow Mode
     // joystick.leftBumper().whileTrue(

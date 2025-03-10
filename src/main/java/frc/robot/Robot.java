@@ -4,14 +4,19 @@
 
 package frc.robot;
 
+import java.beans.Visibility;
+
 import com.ctre.phoenix6.Utils;
 
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.Constants.VisionConstants;
+import frc.robot.generated.TunerConstants;
 
 public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
+  private Command heading_check;
 
   private final RobotContainer m_robotContainer;
 
@@ -30,8 +35,11 @@ public class Robot extends TimedRobot {
   public void disabledInit() {}
 
   @Override
-  public void disabledPeriodic() {}
+  public void disabledPeriodic() {
+    // m_robotContainer.getDrivetrain().getPigeon2().setYaw(LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(VisionConstants.camera0Name).pose.getRotation().getDegrees());
+  }
 
+    
   @Override
   public void disabledExit() {}
 

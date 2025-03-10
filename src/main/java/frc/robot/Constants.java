@@ -70,7 +70,7 @@ public class Constants {
       AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
 
   // Camera names, must match names configured
-  public static String camera0Name = "limelight-zero";
+  public static String camera0Name = "limelight-front";
   public static String camera1Name = "limelight-one";
 
   // Basic filtering thresholds

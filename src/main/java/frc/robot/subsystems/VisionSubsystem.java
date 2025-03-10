@@ -32,18 +32,18 @@ import java.util.function.Supplier;
 public class VisionSubsystem extends SubsystemBase {
 
   // PER-LIMELIGHT
-  private final String[] limelightNames;
-  private final DoubleArrayPublisher[] orientationPublishers;
-  private final DoubleSubscriber[] latencySubscribers;
-  private final DoubleSubscriber[] txSubscribers;
-  private final DoubleSubscriber[] tySubscribers;
-  private final DoubleSubscriber[] taSubscribers;
-  private final DoubleArraySubscriber[] megatag2Subscribers;
-  private final Alert[] disconnectedAlerts;
-  private final TargetObservation[] latestTargetObservations;
-  private final boolean[] connected;
-  private final Integer[] primaryTagIds;
-  private double[] MainTagDistance;
+  private final DoubleArrayPublisher orientationPublishers;
+  private final DoubleSubscriber latencySubscribers;
+  private final DoubleSubscriber txSubscribers;
+  private final DoubleSubscriber tySubscribers;
+  private final DoubleSubscriber taSubscribers;
+  private final DoubleSubscriber tidSubscriber;
+  private final DoubleArraySubscriber megatag2Subscribers;
+  private final Alert disconnectedAlerts;
+  private  TargetObservation latestTargetObservations;
+  private boolean connected;
+  private Integer primaryTagIds;
+  private double MainTagDistance;
 
   // GLOBAL
   private final Supplier<Rotation2d> rotationSupplier;
@@ -54,37 +54,25 @@ public class VisionSubsystem extends SubsystemBase {
    * @param rotationSupplier A supplier for the current robot rotation.
    * @param limelightNames   Varargs of limelight NetworkTable names.
    */
-  public VisionSubsystem(VisionConsumer consumer, Supplier<Rotation2d> rotationSupplier, String... limelightNames) {
+  public VisionSubsystem(VisionConsumer consumer, Supplier<Rotation2d> rotationSupplier) {
     this.consumer = consumer;
     this.rotationSupplier = rotationSupplier;
-    this.limelightNames = limelightNames;
 
-    int count = limelightNames.length;
-    orientationPublishers = new DoubleArrayPublisher[count];
-    latencySubscribers = new DoubleSubscriber[count];
-    txSubscribers = new DoubleSubscriber[count];
-    tySubscribers = new DoubleSubscriber[count];
-    taSubscribers = new DoubleSubscriber[count];
-    MainTagDistance = new double[count];
-    megatag2Subscribers = new DoubleArraySubscriber[count];
-    disconnectedAlerts = new Alert[count];
-    latestTargetObservations = new TargetObservation[count];
-    connected = new boolean[count];
-    primaryTagIds = new Integer[count];
 
-    for (int i = 0; i < count; i++) {
-      var table = NetworkTableInstance.getDefault().getTable(limelightNames[i]);
-      orientationPublishers[i] = table.getDoubleArrayTopic("robot_orientation_set").publish();
-      latencySubscribers[i] = table.getDoubleTopic("tl").subscribe(0.0);
-      txSubscribers[i] = table.getDoubleTopic("tx").subscribe(0.0);
-      tySubscribers[i] = table.getDoubleTopic("ty").subscribe(0.0);
-      taSubscribers[i] = table.getDoubleTopic("ta").subscribe(0.0);
-      megatag2Subscribers[i] = table.getDoubleArrayTopic("botpose_orb_wpiblue").subscribe(new double[] {});
-      disconnectedAlerts[i] = new Alert("Vision camera " + limelightNames[i] + " is disconnected.", AlertType.kWarning);
-      latestTargetObservations[i] = new TargetObservation(Rotation2d.fromDegrees(0.0), Rotation2d.fromDegrees(0.0));
-      connected[i] = false;
-      primaryTagIds[i] = null;
-    }
+
+    var table = NetworkTableInstance.getDefault().getTable(VisionConstants.camera0Name);
+    tidSubscriber = table.getDoubleTopic("tid").subscribe(0.0);
+    orientationPublishers = table.getDoubleArrayTopic("robot_orientation_set").publish();
+    latencySubscribers = table.getDoubleTopic("tl").subscribe(0.0);
+    txSubscribers = table.getDoubleTopic("tx").subscribe(0.0);
+    tySubscribers = table.getDoubleTopic("ty").subscribe(0.0);
+    taSubscribers = table.getDoubleTopic("ta").subscribe(0.0);
+    megatag2Subscribers = table.getDoubleArrayTopic("botpose_orb_wpiblue").subscribe(new double[] {});
+    disconnectedAlerts = new Alert("Vision camera " + VisionConstants.camera0Name + " is disconnected.", AlertType.kWarning);
+    latestTargetObservations = new TargetObservation(Rotation2d.fromDegrees(0.0), Rotation2d.fromDegrees(0.0));
+    connected = false;
+    primaryTagIds = null;
+    
   }
 
   /**
@@ -93,127 +81,124 @@ public class VisionSubsystem extends SubsystemBase {
    * @param index The index of the limelight.
    * @return The tx value (in degrees) as a Rotation2d.
    */
-  public Rotation2d getTargetX(int index) {
-    return latestTargetObservations[index] != null ? latestTargetObservations[index].tx() : Rotation2d.fromDegrees(0.0);
+  public Rotation2d getTargetX() {
+    return latestTargetObservations != null ? latestTargetObservations.tx() : Rotation2d.fromDegrees(0.0);
   }
 
-  public Optional<Integer> getPrimaryTagId(int cameraIndex) {
-    if (cameraIndex < 0 || cameraIndex >= primaryTagIds.length) {
-        return Optional.empty();
+  public Optional<Double> getPrimaryTagId() {
+    if (tidSubscriber.get()==0){
+      return Optional.ofNullable(null);
     }
-    return Optional.ofNullable(primaryTagIds[cameraIndex]);
+    else{
+      return Optional.ofNullable(tidSubscriber.get());
+    }
+
   }
 
-  public double getTX(int cameraIndex){
-    return txSubscribers[cameraIndex].getAsDouble();
+  public double getTX(){
+    return txSubscribers.getAsDouble();
   }
 
-  public double getTY(int cameraIndex){
-    return tySubscribers[cameraIndex].getAsDouble();
+  public double getTY(){
+    return tySubscribers.getAsDouble();
   }
 
-  public double getDistance(int cameraIndex){
-    return MainTagDistance[cameraIndex];
+  public double getDistance(){
+    return MainTagDistance;
   }
 
 
   @Override
   public void periodic() {
-    int count = limelightNames.length;
-    // For each limelight, update its connection status, target observation, and publish current orientation.
-    for (int i = 0; i < count; i++) {
-      // Update connection: if "tl" hasn't updated within 250ms, mark as disconnected.
-      connected[i] = ((RobotController.getFPGATime() - latencySubscribers[i].getLastChange()) / 1000) < 250;
-      disconnectedAlerts[i].set(!connected[i]);
+    // Update its connection status, target observation, and publish current orientation.
+    // Update connection: if "tl" hasn't updated within 250ms, mark as disconnected.
+    connected = ((RobotController.getFPGATime() - latencySubscribers.getLastChange()) / 1000) < 250;
+    disconnectedAlerts.set(!connected);
 
-      // Update target observation (tx and ty)
-      double tx = txSubscribers[i].get();
-      double ty = tySubscribers[i].get();
-      double ta = taSubscribers[i].get();
-      latestTargetObservations[i] = new TargetObservation(Rotation2d.fromDegrees(tx), Rotation2d.fromDegrees(ty));
+    // Update target observation (tx and ty)
+    double tx = txSubscribers.get();
+    double ty = tySubscribers.get();
+    double ta = taSubscribers.get();
+    latestTargetObservations = new TargetObservation(Rotation2d.fromDegrees(tx), Rotation2d.fromDegrees(ty));
 
-      // Publish current robot orientation (Used for MegaTag2)
-      double[] orientation = new double[] { rotationSupplier.get().getDegrees(), 0.0, 0.0, 0.0, 0.0, 0.0 };
-      orientationPublishers[i].accept(orientation);
-      // LimelightHelpers.SetRobotOrientation(limelightNames[count], rotationSupplier.get().getDegrees(), 0, 0, 0, 0, 0);
-    }
+    // Publish current robot orientation (Used for MegaTag2)
+    double[] orientation = new double[] { rotationSupplier.get().getDegrees(), 0.0, 0.0, 0.0, 0.0, 0.0 };
+    orientationPublishers.accept(orientation);
+    // LimelightHelpers.SetRobotOrientation(limelightNames[count], rotationSupplier.get().getDegrees(), 0, 0, 0, 0, 0);
+    
     NetworkTableInstance.getDefault().flush();
 
-    // For each limelight, process pose observations from MegaTag2.
-    for (int i = 0; i < count; i++) {
-      // Read all new samples from the MegaTag2 topic.
-      var rawSamples = megatag2Subscribers[i].readQueue();
-      Set<Integer> tagIdsSet = new HashSet<>();
-      List<PoseObservation> poseObsList = new LinkedList<>();
+    // Process pose observations from MegaTag2.
+
+    // Read all new samples from the MegaTag2 topic.
+    var rawSamples = megatag2Subscribers.readQueue();
+    Set<Integer> tagIdsSet = new HashSet<>();
+    List<PoseObservation> poseObsList = new LinkedList<>();
 
 
-      Integer bestTagId = null;
-      double bestArea = 0;
+    Integer bestTagId = null;
+    double bestArea = 0;
 
-      for (var rawSample : rawSamples) {
-        if (rawSample.value.length == 0) continue;
+    for (var rawSample : rawSamples) {
+      if (rawSample.value.length == 0) continue;
 
-        MainTagDistance[count] = rawSample.value[9];
+      MainTagDistance = rawSample.value[9];
 
 
-        // Accumulate tag IDs
-        for (int j = 11; j < rawSample.value.length; j += 7) {
-          tagIdsSet.add((int) rawSample.value[j]);         
+      // Accumulate tag IDs
+      for (int j = 11; j < rawSample.value.length; j += 7) {
+        tagIdsSet.add((int) rawSample.value[j]);         
 
-          int tagId = (int) rawSample.value[j];
-          double area = rawSample.value[j - 1]; // TA is assumed to be at offset 1 in the block.
-          if (area > bestArea) {
-            bestArea = area;
-            bestTagId = tagId;
-          }
+        int tagId = (int) rawSample.value[j];
+        double area = rawSample.value[j - 1]; // TA is assumed to be at offset 1 in the block.
+        if (area > bestArea) {
+          bestArea = area;
+          bestTagId = tagId;
         }
-
-        // Compute vision timestamp (rawSample.timestamp is in microseconds; rawSample.value[6] is latency in ms)
-        double visionTimestamp = rawSample.timestamp * 1e-6 - rawSample.value[6] * 1e-3;
-        // Parse raw 3D pose from the first six elements.
-        Pose3d rawPose = parsePose(rawSample.value);
-
-        poseObsList.add(new PoseObservation(
-            visionTimestamp,              // seconds
-            rawPose,
-            0.0,                // ambiguity is 0 (MegaTag2)
-            (int) rawSample.value[7],
-            rawSample.value[9]
-        ));
       }
 
-      if (bestTagId != null) {
-        primaryTagIds[i] = bestTagId;
-      } else {
-        primaryTagIds[i] = null;
-      }
+      // Compute vision timestamp (rawSample.timestamp is in microseconds; rawSample.value[6] is latency in ms)
+      double visionTimestamp = rawSample.timestamp * 1e-6 - rawSample.value[6] * 1e-3;
+      // Parse raw 3D pose from the first six elements.
+      Pose3d rawPose = parsePose(rawSample.value);
 
-      // Process each pose observation.
-      for (PoseObservation observation : poseObsList) {
-        // Filtering criteria: reject if no tags, high ambiguity (for one tag), unrealistic Z, or out-of-bounds.
-        boolean rejectPose = (observation.tagCount() == 0)
-            || (observation.tagCount() == 1 && observation.ambiguity() > VisionConstants.maxAmbiguity)
-            || (Math.abs(observation.pose().getZ()) > VisionConstants.maxZError)
-            || (observation.pose().getX() < 0.0 || observation.pose().getX() > VisionConstants.aprilTagLayout.getFieldLength())
-            || (observation.pose().getY() < 0.0 || observation.pose().getY() > VisionConstants.aprilTagLayout.getFieldWidth());
-        if (rejectPose) continue;
+      poseObsList.add(new PoseObservation(
+          visionTimestamp,              // seconds
+          rawPose,
+          0.0,                // ambiguity is 0 (MegaTag2)
+          (int) rawSample.value[7],
+          rawSample.value[9]
+      ));
+    }
 
-        // Compute measurement uncertainties.
-        double stdDevFactor = Math.pow(observation.averageTagDistance(), 2.0) / observation.tagCount();
-        double linearStdDev = VisionConstants.linearStdDevBaseline * stdDevFactor * VisionConstants.linearStdDevMegatag2Factor;
-        double angularStdDev = VisionConstants.angularStdDevBaseline * stdDevFactor * VisionConstants.angularStdDevMegatag2Factor;
-        if (i < VisionConstants.cameraStdDevFactors.length) {
-          linearStdDev *= VisionConstants.cameraStdDevFactors[i];
-          angularStdDev *= VisionConstants.cameraStdDevFactors[i];
-        }
+    if (bestTagId != null) {
+      primaryTagIds = bestTagId;
+    } else {
+      primaryTagIds = null;
+    }
 
-        // Send the valid vision measurement to the consumer.
-        consumer.accept(
-            observation.pose().toPose2d(),
-            observation.timestamp(),
-            VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev)
-        );
-      }
+    // Process each pose observation.
+    for (PoseObservation observation : poseObsList) {
+      // Filtering criteria: reject if no tags, high ambiguity (for one tag), unrealistic Z, or out-of-bounds.
+      boolean rejectPose = (observation.tagCount() == 0)
+          || (observation.tagCount() == 1 && observation.ambiguity() > VisionConstants.maxAmbiguity)
+          || (Math.abs(observation.pose().getZ()) > VisionConstants.maxZError)
+          || (observation.pose().getX() < 0.0 || observation.pose().getX() > VisionConstants.aprilTagLayout.getFieldLength())
+          || (observation.pose().getY() < 0.0 || observation.pose().getY() > VisionConstants.aprilTagLayout.getFieldWidth());
+      if (rejectPose) continue;
+
+      // Compute measurement uncertainties.
+      double stdDevFactor = Math.pow(observation.averageTagDistance(), 2.0) / observation.tagCount();
+      double linearStdDev = VisionConstants.linearStdDevBaseline * stdDevFactor * VisionConstants.linearStdDevMegatag2Factor;
+      double angularStdDev = VisionConstants.angularStdDevBaseline * stdDevFactor * VisionConstants.angularStdDevMegatag2Factor;
+      
+
+      // Send the valid vision measurement to the consumer.
+      consumer.accept(
+          observation.pose().toPose2d(),
+          observation.timestamp(),
+          VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev)
+      );
     }
   }
 
