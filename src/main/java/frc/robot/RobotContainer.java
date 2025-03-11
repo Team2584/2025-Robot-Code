@@ -257,7 +257,8 @@ public class RobotContainer {
                                                       logger,
                                                       0,
                                                       0, 
-                                                      1));
+                                                      0.25,
+                                                      0.5));
 
     // // Right
     // redL4.whileTrue(new DriveRelativeTag(getDrivetrain(), 

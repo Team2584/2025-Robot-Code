@@ -32,6 +32,7 @@ public class DriveTagOffset extends Command{
     private double sideOffset;
     private double TDISTANCE;
     private double forwardOffset;
+    private double speed_multiplier;
     
     private final PIDController PIDx;
     private final PIDController PIDy;
@@ -44,22 +45,23 @@ public class DriveTagOffset extends Command{
 
 
     public DriveTagOffset(CommandSwerveDrivetrain drivetrain, VisionSubsystem vision, Telemetry logger, 
-                          int cameraIndex, double sideOffset, double forwardOffset){
+                          int cameraIndex, double sideOffset, double forwardOffset, double velocity_multiplier){
         this.drivetrain = drivetrain;
         this.vision = vision;
         this.logger = logger;
         this.cameraIndex = cameraIndex;
+        this.speed_multiplier = velocity_multiplier;
 
         this.sideOffset = sideOffset;
         this.forwardOffset = forwardOffset;
 
-        PIDx = new PIDController(9, 0.0, 0.0);
+        PIDx = new PIDController(0.06, 0.0, 0.0);
         PIDx.setSetpoint(0.0);
 
-        PIDy = new PIDController(9, 0.0, 0.0);
+        PIDy = new PIDController(0.06, 0.0, 0.0);
         PIDy.setSetpoint(0.0);
 
-        PIDh = new PIDController(6, 0.0, 0.0);
+        PIDh = new PIDController(0.03, 0.0, 0.0);
         PIDh.setSetpoint(0.0);
 
         addRequirements(drivetrain, vision);
@@ -132,9 +134,9 @@ public class DriveTagOffset extends Command{
 
         drivetrain.setControl(
             robotCentric
-            .withVelocityX(-velX)
-            .withVelocityY(-velY)
-            .withRotationalRate(rotRate));
+            .withVelocityX(-velX * speed_multiplier)
+            .withVelocityY(-velY * speed_multiplier)
+            .withRotationalRate(rotRate * speed_multiplier));
     }
 
 
