@@ -32,7 +32,8 @@ public class NetAlgae extends SequentialCommandGroup {
 
                 new ParallelCommandGroup(
                         wrist.WristPose(-60),
-                        elevator.moveToHeight(Constants.ElevatorConstants.NET)).withTimeout(1)
+                        new InstantCommand(()-> elevator.setHeight(Constants.ElevatorConstants.NET))).withTimeout(1)
+                        //elevator.moveToHeight(Constants.ElevatorConstants.NET)).withTimeout(1)
 
         );
 

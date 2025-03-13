@@ -21,10 +21,13 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.Slot1Configs;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
@@ -51,10 +54,13 @@ public class ElevatorSubsystem extends SubsystemBase {
   private final DigitalInput elevatorZeroLimit;
 
   /* Configs */
-  private static final TalonFXConfiguration leaderConfiguration = new TalonFXConfiguration();
+  private static final TalonFXConfiguration leaderConfiguration0 = new TalonFXConfiguration();
+  private static final TalonFXConfiguration leaderConfiguration1 = new TalonFXConfiguration();
   private Slot0Configs slot0Configs;
+  //private Slot1Configs slot1Configs;
   private final MotionMagicConfigs motionMagicConfigs;
-  private final MotionMagicExpoVoltage motionProfileReq;
+  //private final MotionMagicConfigs motionMagicConfigs1;
+  private final MotionMagicVoltage motionProfileReq;
 
   private double setpoint;
 
@@ -63,7 +69,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   TunableDashboardNumber kG = new TunableDashboardNumber("Elevator/kG", 0.0);
   TunableDashboardNumber kA = new TunableDashboardNumber("Elevator/kA", 0.01);
   TunableDashboardNumber kV = new TunableDashboardNumber("Elevator/kV", 0.3);
-  TunableDashboardNumber kP = new TunableDashboardNumber("Elevator/kP", 8);
+  TunableDashboardNumber kP = new TunableDashboardNumber("Elevator/kP", 12);
   TunableDashboardNumber kI = new TunableDashboardNumber("Elevator/kI", 0.0);
   TunableDashboardNumber kD = new TunableDashboardNumber("Elevator/kD", 0.01);
 
@@ -86,46 +92,64 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     elevatorZeroLimit = new DigitalInput(9);
 
-    FeedbackConfigs fdb = leaderConfiguration.Feedback;
+    FeedbackConfigs fdb = leaderConfiguration0.Feedback;
     fdb.SensorToMechanismRatio = ElevatorConstants.ELEVATOR_GEAR_RATIO;
-    motionProfileReq = new MotionMagicExpoVoltage(0); // This is the motion profile, all setControl must target position
+    motionProfileReq = new MotionMagicVoltage(0); // This is the motion profile, all setControl must target position
                                                       // based on this (m_)
 
     this.leader.setPosition(0);
 
     /* Create Configs */
-    leaderConfiguration.CurrentLimits.SupplyCurrentLimit = 120;
-    leaderConfiguration.CurrentLimits.SupplyCurrentLimitEnable = true;
-    leaderConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    leaderConfiguration.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
-    slot0Configs = leaderConfiguration.Slot0; // PID Gains
-    slot0Configs.kP = kP.get(); // Adjust based on your elevator's needs
-    slot0Configs.kI = kI.get();
-    slot0Configs.kD = kD.get();
-    slot0Configs.kV = kV.get(); // Roughly 1.2V per RPS
-    slot0Configs.kA = kA.get(); // Roughly 1.2V per RPS
-    slot0Configs.kG = kG.get(); // Adds constant value to hold elevator up
-    slot0Configs.kS = kS.get(); // Static friction compensation
+    // Config 0 
 
-    motionMagicConfigs = leaderConfiguration.MotionMagic;
-    motionMagicConfigs.MotionMagicCruiseVelocity = motionCruiseVelocity.get();// Rotations per second
-    motionMagicConfigs.MotionMagicExpo_kV = mm_kV.get(); // kV is around 0.12 V/rps
-    // motionMagicConfigs.MotionMagicExpo_kA = mm_kA.get(); // Use a slower kA of
-    // 0.1 V/(rps/s)
+    leaderConfiguration0.CurrentLimits.SupplyCurrentLimit = 60;
+    leaderConfiguration0.CurrentLimits.SupplyCurrentLimitEnable = true;
+    leaderConfiguration0.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    leaderConfiguration0.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+
+    slot0Configs = leaderConfiguration0.Slot0; // PID Gains
+    
+    slot0Configs.kP = 12; // Adjust based on your elevator's needs
+    slot0Configs.kI = 0;
+    slot0Configs.kD = 0.01;
+    slot0Configs.kV = 0.3; // Roughly 1.2V per RPS
+    slot0Configs.kA = 0.01; // Roughly 1.2V per RPS
+    slot0Configs.kG = 0; // Adds constant value to hold elevator up
+    slot0Configs.kS = 0.3; // Static friction compensation
+    slot0Configs.GravityType = GravityTypeValue.Elevator_Static;
+
+    motionMagicConfigs = leaderConfiguration0.MotionMagic;
+
+
+    motionMagicConfigs.MotionMagicCruiseVelocity = 100;
+    motionMagicConfigs.MotionMagicAcceleration = 65;
+    motionMagicConfigs.MotionMagicExpo_kV = 0.12;
+
+    // Config 1
+
+    leaderConfiguration0.Slot1.kP = 3;//1; // Adjust based on your elevator's needs
+    leaderConfiguration0.Slot1.kI = 0;
+    leaderConfiguration0.Slot1.kD = 0.1;//0.1;
+    leaderConfiguration0.Slot1.kV = 0.12; // Roughly 1.2V per RPS
+    leaderConfiguration0.Slot1.kA = 0.01;//10; // Roughly 1.2V per RPS
+    leaderConfiguration0.Slot1.kG = 0;//0; // Adds constant value to hold elevator up
+    leaderConfiguration0.Slot1.kS = 0;//0.3; // Static friction compensation
+    leaderConfiguration0.Slot1.GravityType = GravityTypeValue.Elevator_Static;
+
 
     /* Apply Configs */
-    leader.getConfigurator().apply(leaderConfiguration, 0.25);
+    leader.getConfigurator().apply(leaderConfiguration0, 0.25);
 
     // Set up signal monitoring
-    supplyLeft = leader.getSupplyCurrent();
-    supplyRight = follower.getSupplyCurrent();
+    supplyLeft = follower.getSupplyCurrent();
+    supplyRight = leader.getSupplyCurrent();
     closedLoopReferenceSlope = leader.getClosedLoopReferenceSlope();
 
     BaseStatusSignal.setUpdateFrequencyForAll(
         100, supplyLeft, supplyRight, closedLoopReferenceSlope);
 
-    follower.setControl(new Follower(ElevatorConstants.ELEVATOR_LEFT_ID, true));
+    follower.setControl(new Follower(ElevatorConstants.ELEVATOR_RIGHT_ID, true));
 
   }
 
@@ -137,11 +161,55 @@ public class ElevatorSubsystem extends SubsystemBase {
       return;
     }
     setpoint = heightInches;
+
+    if (setpoint < 3){ //< rotationsToInches(leader.getPosition().getValueAsDouble())) {    
+      leaderConfiguration0.MotionMagic.MotionMagicCruiseVelocity = 80;
+      leaderConfiguration0.MotionMagic.MotionMagicAcceleration = 30;
+      leader.getConfigurator().apply(leaderConfiguration0);
+      leader.setControl(motionProfileReq.withSlot(1));
+    }
+    else if (setpoint > 50){
+      leaderConfiguration0.MotionMagic.MotionMagicCruiseVelocity = 200;
+      leaderConfiguration0.MotionMagic.MotionMagicAcceleration = 50;
+      leader.getConfigurator().apply(leaderConfiguration0);
+      leader.setControl(motionProfileReq.withSlot(0));
+    }
+    else{
+      motionMagicConfigs.MotionMagicCruiseVelocity = 200;
+      motionMagicConfigs.MotionMagicAcceleration = 75;
+      motionMagicConfigs.MotionMagicExpo_kV = 0.12;
+      leader.getConfigurator().apply(leaderConfiguration0);
+      leader.setControl(motionProfileReq.withSlot(0));
+    }
+
     leader.setControl(motionProfileReq.withPosition(inchesToRotations(heightInches)));
   }
 
   public Command moveToHeight(double heightInches) {
     setpoint = heightInches;
+
+
+    if (setpoint < 3){ //< rotationsToInches(leader.getPosition().getValueAsDouble())) {
+      leaderConfiguration0.MotionMagic.MotionMagicCruiseVelocity = 80;
+      leaderConfiguration0.MotionMagic.MotionMagicAcceleration = 30;
+      leader.getConfigurator().apply(leaderConfiguration0);
+      leader.setControl(motionProfileReq.withSlot(1));
+    }
+    else if (setpoint > 50){
+      leaderConfiguration0.MotionMagic.MotionMagicCruiseVelocity = 200;
+      leaderConfiguration0.MotionMagic.MotionMagicAcceleration = 50;
+      leader.getConfigurator().apply(leaderConfiguration0);
+      leader.setControl(motionProfileReq.withSlot(0));
+    }
+    else{
+      motionMagicConfigs.MotionMagicCruiseVelocity = 200;
+      motionMagicConfigs.MotionMagicAcceleration = 75;
+      motionMagicConfigs.MotionMagicExpo_kV = 0.12;
+      leader.getConfigurator().apply(leaderConfiguration0);
+      leader.setControl(motionProfileReq.withSlot(0));
+    }
+
+ 
     return runOnce(() -> leader.setControl(motionProfileReq.withPosition(inchesToRotations(heightInches))));
   }
 
@@ -160,7 +228,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     leader.setPosition(inchesToRotations(newHeightInches));
     follower.setPosition(inchesToRotations(newHeightInches));
   }
-
+/** 
   public void updateTunableNumbers() {
     if (kS.hasChanged(0)
         || kG.hasChanged(0)
@@ -170,21 +238,27 @@ public class ElevatorSubsystem extends SubsystemBase {
         || kI.hasChanged(0)
         || kD.hasChanged(0)
         || motionCruiseVelocity.hasChanged(0)) {
-      slot0Configs.kS = kS.get();
-      slot0Configs.kG = kG.get();
-      slot0Configs.kA = kA.get();
-      slot0Configs.kV = kV.get();
-      slot0Configs.kP = kP.get();
-      slot0Configs.kI = kI.get();
-      slot0Configs.kD = kD.get();
+    slot0Configs.kP = 2; // Adjust based on your elevator's needs
+    slot0Configs.kI = 0;
+    slot0Configs.kD = 0.01;
+    slot0Configs.kV = 0.3; // Roughly 1.2V per RPS
+    slot0Configs.kA = kA.get(); // Roughly 1.2V per RPS
+    slot0Configs.kG = kG.get(); // Adds constant value to hold elevator up
+    slot0Configs.kS = 0.3; // Static friction compensation
 
-      motionMagicConfigs.MotionMagicCruiseVelocity = motionCruiseVelocity.get();// Rotations per second
-      motionMagicConfigs.MotionMagicExpo_kV = mm_kV.get();
-      motionMagicConfigs.MotionMagicExpo_kA = mm_kA.get();
 
-      leader.getConfigurator().apply(leaderConfiguration, 0.25);
+      motionMagicConfigs.MotionMagicCruiseVelocity = 200;
+      motionMagicConfigs.MotionMagicAcceleration = 45;
+      motionMagicConfigs.MotionMagicExpo_kV = 0.12;
+
+      //motionMagicConfigs.MotionMagicCruiseVelocity = motionCruiseVelocity.get();// Rotations per second
+      //motionMagicConfigs.MotionMagicExpo_kV = mm_kV.get();
+      //motionMagicConfigs.MotionMagicExpo_kA = mm_kA.get();
+
+      leader.getConfigurator().apply(leaderConfiguration0, 0.25);
     }
   }
+  **/
 
   public boolean isZero() {
     return !elevatorZeroLimit.get(); // Returns true if Zero

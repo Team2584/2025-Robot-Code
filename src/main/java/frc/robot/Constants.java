@@ -21,19 +21,19 @@ public class Constants {
     public static final double L1 = 3.8; // TUNE ME
     public static final double L2 = 15; // TUNE ME
     public static final double L3 = 30; // TUNE ME
-    public static final double L4 = 54; // TUNE ME
+    public static final double L4 = 56; // TUNE ME
 
     public static final double GROUND_ALGAE = 0; // TUNE ME
     public static final double ALGAE_LOW = 23; // TUNE ME
     public static final double ALGAE_HIGH = 40; // TUNE ME
 
-    public static final double NET = 54;
+    public static final double NET = 56;
 
     /* Physical Measurements */
     public static final double ELEVATOR_MIN_HEIGHT = 0;
-    public static final double ELEVATOR_MAX_HEIGHT = 55; // (actually ~~65in)
+    public static final double ELEVATOR_MAX_HEIGHT = 65; // (actually ~~65in)
     public static final double ELEVATOR_PULLEY_PITCH_DIAMETER = 1.504;
-    public static final double ELEVATOR_GEAR_RATIO = 8.571;
+    public static final double ELEVATOR_GEAR_RATIO = 8.571 / 3.0;
   }
 
   public static final class WristConstants {
