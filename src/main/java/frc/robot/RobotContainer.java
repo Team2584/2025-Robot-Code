@@ -326,9 +326,8 @@ public class RobotContainer {
     // )
     // );
 
-    joystick.leftTrigger().onTrue(new driveWithSpeed(drivetrain,joystick,0.05));
+    joystick.leftTrigger().whileTrue(new driveWithSpeed(drivetrain,joystick,0.05));
 
-    joystick.rightTrigger().onTrue(new driveWithSpeed(drivetrain,joystick,0.40));
 
     joystick.back().whileTrue(climber.liftRobot()); // Lift Robot (Winch in)
 
